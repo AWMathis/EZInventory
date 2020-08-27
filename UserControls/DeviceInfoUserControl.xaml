@@ -1,0 +1,46 @@
+﻿<UserControl x:Class="EZInventory.UserControls.DeviceInfoUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:EZInventory.UserControls"
+			 xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             mc:Ignorable="d" 
+             d:DesignHeight="300" d:DesignWidth="300">
+
+
+	<Grid>
+		<GroupBox Header="{Binding Title}"  Margin="0,0,0,0" Foreground="Green" BorderBrush="Red">
+
+			<Grid>
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+
+				<GroupBox Grid.Row="0" Grid.Column="0" Header="Model" HorizontalAlignment="Stretch" Margin="0,0,0,0" Foreground="Yellow">
+					<TextBox x:Name="DeviceModel" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding Model}"/>
+				</GroupBox>
+
+				<GroupBox Grid.Row="0" Grid.Column="1" Header="Serial Number" HorizontalAlignment="Stretch" Margin="2,0,0,0" Foreground="Pink">
+					<TextBox x:Name="DeviceSerialNumber" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding SerialNumber}"/>
+				</GroupBox>
+
+				<GroupBox Grid.Row="1" Grid.Column="0" Header="Manufacturer" HorizontalAlignment="Stretch" Margin="0,0,0,0" Foreground="Yellow">
+					<TextBox x:Name="DeviceManufacturer" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding Manufacturer}"/>
+				</GroupBox>
+
+				<GroupBox Grid.Row="1" Grid.Column="1" Header="Driver Name" HorizontalAlignment="Stretch" Margin="2,0,0,0" Foreground="Pink">
+					<TextBox x:Name="DeviceDriverName" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding DriverName}"/>
+				</GroupBox>
+
+			</Grid>
+
+		</GroupBox>
+
+	</Grid>
+</UserControl>

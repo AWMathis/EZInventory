@@ -1,0 +1,12 @@
+﻿<Application x:Class="EZInventory.App"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="clr-namespace:EZInventory"
+			 DispatcherUnhandledException="Application_DispatcherUnhandledException"
+			 xmlns:sys="clr-namespace:System;assembly=mscorlib"
+			 Startup="Application_Startup"
+				 >
+    <Application.Resources>
+		<sys:Double x:Key="MonitorInfoHeight">100</sys:Double>
+    </Application.Resources>
+</Application>
