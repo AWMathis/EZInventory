@@ -19,13 +19,11 @@ using System.Threading;
 using System.ComponentModel;
 using EZInventory.InfoClasses;
 using Microsoft.Win32;
+using System.IO;
+using System.Reflection;
 
 
 /*
- * Add enter to search
-
-Lookup by IP only doesn’t work. When name is blank it searches with localhost still
-
 IP address is kinda formatted weird… for exm014 it’s “172.21.57.99InterNetwork;”  for mine “fe80::21f5:21d:4a69:8bed%17InterNetworkV6; fe80::c46b:8576:5ba3:d9d2%11InterNetworkV6; fe80::91ce:e6a8:bcee:f56d%18InterNetworkV6; fe80::29b6:dfde:d75e:372b%23InterNetworkV6; 172.21.57.47InterNetwork; 192.168.215.241InterNetwork; 169.254.80.80InterNetwork; 172.16.80.1InterNetwork; fd11:deed:222:10:34ed:839:e95c:a417InterNetworkV6; fd11:deed:222:10:91ce:e6a8:bcee:f56dInterNetworkV6;”
 
 My current method doesn’t get currently disconnected devices and seems to miss label printers because of it (maybe they’re sleeping?). It could be worth just querying the registry instead… It looks like that’s what usbdeview does anyway…
@@ -37,14 +35,16 @@ Add checkboxes for things like surface docks. Maybe parse them specially and add
  */
 
 namespace EZInventory {
-	/// <summary>
-	/// Interaction logic for Info_Window.xaml
-	/// </summary>
+
 	public partial class Info_Window : Window {
+
+		private Dictionary<string,VendorInfo> usbIDDictionary;
 
 		public Info_Window() {
 			InitializeComponent();
 			StatusBarText.Text = "Ready";
+			usbIDDictionary = new Dictionary<string, VendorInfo>();
+			ParseUSBIDs();
 			ComputerName.Focus();
 		}
 		public void SetValues(ComputerInfo info) {
@@ -62,7 +62,7 @@ namespace EZInventory {
 
 			if (ComputerName.Text == "" && IPAddress.Text == "") {
 				Console.WriteLine("No name or IP entered, searching local host...");
-				computer = "localHost";
+				computer = System.Environment.MachineName;
 			}
 			else if (ComputerName.Text == "" && IPAddress.Text != "") {
 				computer = Dns.GetHostAddresses(IPAddress.Text)[0].ToString();
@@ -100,6 +100,8 @@ namespace EZInventory {
 			}
 
 			if (pingReply.Status == IPStatus.Success) {
+
+				ParseUSBIDs();
 
 				(sender as BackgroundWorker).ReportProgress(1);
 				ComputerInfo computerInfo = GetComputerInfo(computer);
@@ -220,38 +222,6 @@ namespace EZInventory {
 			}
 		}
 
-		private List<DeviceInfo> GetDeviceInfo(string computer) {
-
-			List<DeviceInfo> deviceInfos = new List<DeviceInfo>();
-
-			ManagementObjectCollection devices = CIMQuery(computer, "Win32_PNPEntity");
-
-			int i = 0;
-
-			foreach (ManagementObject entity in devices) {
-
-				if (entity.Properties["Description"].Value != null && entity.Properties["DeviceID"].Value != null) {
-
-					string manufacturer = ""; //objUSBDevice["Manufacturer"].ToString(); ;
-					string model = entity.Properties["Description"].Value.ToString();
-					string serialNumber = entity.Properties["DeviceID"].Value.ToString().Split('\\')[2]; //.ToString().Split('\\')[2];
-					string type = entity.Properties["DeviceID"].Value.ToString().Split('\\')[0];
-
-					if (!serialNumber.Any(ch => !Char.IsLetterOrDigit(ch)) && type == "USB") {
-						deviceInfos.Add(new DeviceInfo(manufacturer, model, serialNumber, ""));
-
-					}
-
-					
-				}
-
-				
-
-			}
-
-			return deviceInfos;
-		}
-
 		private List<DeviceInfo> GetDeviceInfoRegistry(string computer) {
 
 			List<DeviceInfo> deviceInfos = new List<DeviceInfo>();
@@ -260,11 +230,11 @@ namespace EZInventory {
 			List<string> driverNames = new List<string>();
 			List<string> manufacturers = new List<string>();
 
-			RegistryKey remoteReg = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, "AlisLuminis");
+			RegistryKey remoteReg = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, computer);
 
 			RegistryKey regKey = remoteReg.OpenSubKey("SYSTEM").OpenSubKey("CurrentControlSet").OpenSubKey("Enum").OpenSubKey("USB");
 
-			foreach (string keyName in regKey.GetSubKeyNames()) {
+			foreach (string keyName in regKey.GetSubKeyNames()) { //Search registry for previously connected USB devices
 
 				foreach (string subKeyName in regKey.OpenSubKey(keyName).GetSubKeyNames()) {
 					if (!subKeyName.Any(ch => !Char.IsLetterOrDigit(ch))) {
@@ -282,7 +252,7 @@ namespace EZInventory {
 				driverNames.Add("Unknown :(");
 			}
 
-			foreach (ManagementObject driver in query) {
+			foreach (ManagementObject driver in query) { //Cross reference drivers against the registry entries
 
 				string driverDevice = (string)driver.Properties["DeviceID"].Value;
 
@@ -299,11 +269,115 @@ namespace EZInventory {
 
 			}
 
-			for (int i = 0; i < deviceIDs.Count; i++) {
-				deviceInfos.Add(new DeviceInfo(manufacturers[i], "", TestForHex(serialNumbers[i]), driverNames[i]));
+
+			for (int i = 0; i < deviceIDs.Count; i++) { //Create device info objects
+
+				string deviceID = deviceIDs[i].Split('\\')[1];
+				string vendor = deviceID.Substring(4, 4).ToUpper();
+				string device = deviceID.Substring(13, 4).ToUpper();
+
+				(string mfg, string dev) ret = DeviceIDLookup(vendor, device);
+
+				string manufacturer = ret.mfg;
+				if (manufacturer == null) {
+					manufacturer = manufacturers[i];
+				}
+
+				string model = ret.dev;
+				if (model == null) {
+					model = "?????";
+				}
+
+				string serial = TestForHex(serialNumbers[i]);
+
+				string driverName = driverNames[i];
+				
+				deviceInfos.Add(new DeviceInfo(manufacturer, model, serial, driverName, vendor, device));
 			}
 
 			return deviceInfos;
+		}
+
+		private void ParseUSBIDs () {
+
+			if (usbIDDictionary.Count != 0) { //Makes this only run once
+				return;
+			}
+
+			string usbIDS = System.Text.Encoding.Default.GetString(Properties.Resources.usb);
+			string[] usbIDSArray = usbIDS.Split('\n');
+
+			int arrayLength = usbIDSArray.Length;
+			for (int i = 0; i < usbIDSArray.Length;) {
+				if (usbIDSArray[i].Length > 0) {
+
+					if (usbIDSArray[i][0] != '\t' && usbIDSArray[i][0] != '#') { //if it's a vendor ID
+						
+						if (usbIDSArray[i].Substring(0, 4).Contains(' ')) { //If we're past the device/vendor ids
+							break;
+						}
+
+						string id = usbIDSArray[i].Substring(0, 4).ToUpper();
+						string name = usbIDSArray[i].Substring(6);
+						List<VendorDeviceInfo> children = new List<VendorDeviceInfo>();
+
+						int childOffset = 1;
+						while(usbIDSArray[i+childOffset][0] == '\t' && usbIDSArray[i+childOffset][0] != '#') { //while line is still a child
+
+							string childID = usbIDSArray[i + childOffset].Substring(1, 4).ToUpper();
+							string childName = usbIDSArray[i + childOffset].Substring(5);
+							children.Add(new VendorDeviceInfo(childID, childName));
+
+							if (i+childOffset+1 >= arrayLength || usbIDSArray[i + childOffset + 1].Length < 6) { //Out of bounds prevention
+								break;
+							}
+
+							childOffset++;
+
+						}
+
+
+						VendorInfo tempInfo = new VendorInfo(id, name, children);
+
+						usbIDDictionary.Add(id, tempInfo);
+
+						if (childOffset == 0) {
+							childOffset = 1;
+						}
+
+						i += childOffset;
+					} else {
+						i++;
+					}
+				} else {
+					i++;
+				}
+			}
+
+		}
+
+		private (string mfg, string dev) DeviceIDLookup(string vendorID, string deviceID) {
+
+			if (usbIDDictionary.ContainsKey(vendorID)) {
+
+				VendorInfo vendor = usbIDDictionary[vendorID];
+				VendorDeviceInfo device = null;
+
+				foreach(VendorDeviceInfo vendorDevice in vendor.Products) {
+					if (vendorDevice.ID == deviceID) {
+						device = vendorDevice;
+					}
+				}
+
+				if (device != null) {
+					return (vendor.Name, device.Name);
+				} else {
+					return (vendor.Name, null);
+				}
+
+			}
+
+			return (null, null);
 		}
 
 		//Apparently some serials can be encoded as hexidecimal (at least usbdeview has an option saying so). This tests the string to see if it's probably in hex and if so converts it to ASCII

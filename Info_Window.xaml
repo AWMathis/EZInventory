@@ -100,7 +100,12 @@
 					</Grid>
 				</GroupBox>
 
-				<GroupBox Grid.Row="2" Header="USB Device Info" FontSize="15" MinHeight="150" Margin="0,0,0,0" Foreground="Pink" VerticalAlignment="Stretch">
+				<GroupBox Grid.Row="2" MinHeight="150" Margin="0,0,0,0" Foreground="Pink" VerticalAlignment="Stretch">
+
+					<GroupBox.Header>
+						<TextBlock FontSize="15">USBDevice Info</TextBlock>
+					</GroupBox.Header>
+					
 					<Grid HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
 						<StackPanel Orientation="Vertical" x:Name="DeviceInfoStackPanel" VerticalAlignment="Stretch">
 
