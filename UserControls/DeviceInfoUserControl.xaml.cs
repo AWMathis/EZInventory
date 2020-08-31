@@ -26,12 +26,18 @@ namespace EZInventory.UserControls {
 		}
 
 		public DeviceInfoUserControl(DeviceInfo info) {
-			Manufacturer = info.Manufacturer;
-			Model = info.Model;
-			SerialNumber = info.SerialNumber;
-			DriverName = info.DriverName;
 
 			InitializeComponent();
+
+			Manufacturer = info.Manufacturer + " (VID=" + info.VendorID + ")";
+			Model = info.Model + " (PID=" + info.DeviceID + ")";
+			SerialNumber = info.SerialNumber;
+			DriverName = info.DriverName;
+			//Connected = info.Connected.ToString();
+
+			DeviceConnected.Background = info.Connected ? Brushes.Green :  Brushes.Red;
+
+			
 			this.DataContext = this;
 		}
 
@@ -42,6 +48,8 @@ namespace EZInventory.UserControls {
 		public string SerialNumber { get; set; }
 
 		public string DriverName { get; set; }
+
+		public string Connected { get; set; }
 
 		public string Title { get; set; }
 

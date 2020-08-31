@@ -51,6 +51,7 @@ namespace EZInventory.InfoClasses{
 		public string DriverName;
 		public string VendorID;
 		public string DeviceID;
+		public bool Connected;
 
 		public DeviceInfo() {
 			Manufacturer = "";
@@ -59,15 +60,17 @@ namespace EZInventory.InfoClasses{
 			DriverName = "";
 			VendorID = "";
 			DeviceID = "";
+			Connected = false;
 		}
 
-		public DeviceInfo(string manufacturer, string model, string serial, string driverName, string vendorID, string deviceID) {
+		public DeviceInfo(string manufacturer, string model, string serial, string driverName, string vendorID, string deviceID, bool connected) {
 			Manufacturer = manufacturer;
 			Model = model;
 			SerialNumber = serial;
 			DriverName = driverName;
 			VendorID = vendorID;
 			DeviceID = deviceID;
+			Connected = connected;
 		}
 	}
 

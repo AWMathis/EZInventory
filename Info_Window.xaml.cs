@@ -24,14 +24,23 @@ using System.Reflection;
 
 
 /*
-IP address is kinda formatted weird… for exm014 it’s “172.21.57.99InterNetwork;”  for mine “fe80::21f5:21d:4a69:8bed%17InterNetworkV6; fe80::c46b:8576:5ba3:d9d2%11InterNetworkV6; fe80::91ce:e6a8:bcee:f56d%18InterNetworkV6; fe80::29b6:dfde:d75e:372b%23InterNetworkV6; 172.21.57.47InterNetwork; 192.168.215.241InterNetwork; 169.254.80.80InterNetwork; 172.16.80.1InterNetwork; fd11:deed:222:10:34ed:839:e95c:a417InterNetworkV6; fd11:deed:222:10:91ce:e6a8:bcee:f56dInterNetworkV6;”
-
 My current method doesn’t get currently disconnected devices and seems to miss label printers because of it (maybe they’re sleeping?). It could be worth just querying the registry instead… It looks like that’s what usbdeview does anyway…
-
-Integrate usb.ids to get user friendly names 😊
 
 Add checkboxes for things like surface docks. Maybe parse them specially and add a normal device object?
  * 
+pnputil /enum-devices /disconnected
+
+Need a way to tell/sort by what’s connected. Maybe a last connected date value too? You can use win32_pnpentity to check, disconnected devices don’t show in there. Maybe win32_usbdevice too?
+ * 
+pnputil /enum-devices /disconnected can kinda do it... get-pnpdevice works too... so why TF can't you get disconnected devices through win32_pnpentity?!?!?!
+get-pnpdevice uses the System.Management.Automation.InvocationInfo namespace... maybe there's something there?
+Registry keys have a DeviceDesc property, can we rely on that?
+ * 
+ * 
+ * Add the ability to supply your own usb.ids file. Maybe just check if it's in the same directory as this exe?
+ * 
+ * Need a way to toggle serial decoding 
+
  */
 
 namespace EZInventory {
@@ -72,6 +81,10 @@ namespace EZInventory {
 				computer = ComputerName.Text;
 				Console.WriteLine("Searching by hostname...");
 			}
+
+
+			MonitorInfoStackPanel.Children.Clear();
+			DeviceInfoStackPanel.Children.Clear();
 
 			BackgroundWorker worker = new BackgroundWorker();
 			worker.DoWork += worker_QueryInfo;
@@ -156,8 +169,7 @@ namespace EZInventory {
 			int i = 0;
 			foreach (IPAddress a in addresses) {
 
-				computerIP += a.ToString() + a.AddressFamily;
-				computerIP += "; ";
+				computerIP += a.ToString() + "; "; ;
 			}
 
 			ManagementObjectCollection biosInfoCollection = CIMQuery(computer, "Win32_Bios");
@@ -228,51 +240,75 @@ namespace EZInventory {
 			List<string> deviceIDs = new List<string>();
 			List<string> serialNumbers = new List<string>();
 			List<string> driverNames = new List<string>();
+			List<string> entityNames = new List<string>();
 			List<string> manufacturers = new List<string>();
+			List<bool> connecteds = new List<bool>();
 
 			RegistryKey remoteReg = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, computer);
 
 			RegistryKey regKey = remoteReg.OpenSubKey("SYSTEM").OpenSubKey("CurrentControlSet").OpenSubKey("Enum").OpenSubKey("USB");
 
+			int deviceIndex = 0;
 			foreach (string keyName in regKey.GetSubKeyNames()) { //Search registry for previously connected USB devices
 
 				foreach (string subKeyName in regKey.OpenSubKey(keyName).GetSubKeyNames()) {
 					if (!subKeyName.Any(ch => !Char.IsLetterOrDigit(ch))) {
-						deviceIDs.Add("USB\\" + keyName + "\\" + subKeyName);
+						deviceIDs.Add(keyName); //deviceIDs.Add("USB\\" + keyName + "\\" + subKeyName);
 						serialNumbers.Add(subKeyName);
 						manufacturers.Add(regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("Mfg").ToString().Split(';')[1]);
+
+						driverNames.Add(regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("DeviceDesc").ToString().Split(';')[1]);
+						deviceIndex++;
 					}
+					else if (keyName.Split('&').Length > 1) { //Add devices with same VID/PID but different after
+						if (deviceIDs.Contains(keyName.Split('&')[0] + "&" + keyName.Split('&')[1])) {
+							string driverDesc = regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("DeviceDesc").ToString();
+							if (driverDesc.Split(';').Length > 1) {
+								driverNames[deviceIndex - 1] = driverDesc.Split(';')[1] + "; " + driverNames[deviceIndex - 1];
+							}
+							else {
+								driverNames[deviceIndex - 1] = driverDesc + "; " + driverNames[deviceIndex - 1];
+							}
+							
+						}
+					}
+
 				}
 
 			}
 
-			ManagementObjectCollection query = CIMQuery(computer, "Win32_PnPSignedDriver");
-
-			while (driverNames.Count < deviceIDs.Count) {
-				driverNames.Add("Unknown :(");
+			//Prevent any out of bounds errors
+			while (entityNames.Count < deviceIDs.Count) {
+				entityNames.Add(null);
 			}
 
-			foreach (ManagementObject driver in query) { //Cross reference drivers against the registry entries
+			//Query win32_pnpentity class to get device info
+			ManagementObjectCollection pnpEntityQuery = CIMQuery(computer, "Win32_PnPEntity");
+			foreach (ManagementObject entity in pnpEntityQuery) { //Cross reference drivers against the registry entries
 
-				string driverDevice = (string)driver.Properties["DeviceID"].Value;
+				string entityDevice = ((string)entity.Properties["PNPDeviceID"].Value) ?? "";
 
-				string driverDeviceType = driverDevice.Split('\\')[0];
+				if (entityDevice.Split('\\').Length > 1) {
+					entityDevice = entityDevice.Split('\\')[1]; // USB\VID_18D1&PID_0001&REV_0310 -> VID_18D1&PID_0001&REV_0310
+				}
 
-				if (driverDeviceType == "USB") {
+				string[] entityDeviceStrings = entityDevice.Split('&');
+				if (entityDeviceStrings.Length > 1) {
+					entityDevice = entityDeviceStrings[0] + "&" + entityDeviceStrings[1] + ""; // VID_18D1&PID_0001&REV_0310 -> VID_18D1&PID_0001
 
-					int index = deviceIDs.IndexOf(driverDevice);
+					int index = deviceIDs.IndexOf(entityDevice);
 					if (index != -1) {
-						driverNames[index] = (string)driver.Properties["DeviceName"].Value;
+						if (entityNames[index] != null) {
+							entityNames[index] += ", ";
+						}
+						entityNames[index] += (string)entity.Properties["Name"].Value ?? (string)entity.Properties["Caption"].Value ?? (string)entity.Properties["Description"].Value;
 					}
-
 				}
-
 			}
-
 
 			for (int i = 0; i < deviceIDs.Count; i++) { //Create device info objects
 
-				string deviceID = deviceIDs[i].Split('\\')[1];
+				string deviceID = deviceIDs[i]; //.Split('\\')[1];
 				string vendor = deviceID.Substring(4, 4).ToUpper();
 				string device = deviceID.Substring(13, 4).ToUpper();
 
@@ -290,9 +326,11 @@ namespace EZInventory {
 
 				string serial = TestForHex(serialNumbers[i]);
 
-				string driverName = driverNames[i];
+				string driverName = entityNames[i] ?? driverNames[i] ??  "Unknown :(";
+
+				bool connected = (entityNames[i] != null);
 				
-				deviceInfos.Add(new DeviceInfo(manufacturer, model, serial, driverName, vendor, device));
+				deviceInfos.Add(new DeviceInfo(manufacturer, model, serial, driverName, vendor, device, connected));
 			}
 
 			return deviceInfos;
@@ -300,7 +338,7 @@ namespace EZInventory {
 
 		private void ParseUSBIDs () {
 
-			if (usbIDDictionary.Count != 0) { //Makes this only run once
+			if (usbIDDictionary.Count != 0) { //Makes this only run once, just in case
 				return;
 			}
 
@@ -429,6 +467,9 @@ namespace EZInventory {
 			ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
 
 			ManagementObjectCollection queryCollection = searcher.Get();
+
+			searcher.Dispose();
+
 			return queryCollection;
 		}
 
@@ -441,7 +482,7 @@ namespace EZInventory {
 
 			ManagementObjectCollection queryCollection = searcher.Get();
 
-			Console.WriteLine(queryCollection.ToString());
+			searcher.Dispose();
 
 			return queryCollection;
 		}
