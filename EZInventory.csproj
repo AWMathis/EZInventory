@@ -60,6 +60,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="InfoClasses\InfoClasses.cs" />
+    <Compile Include="InfoClasses\InfoGetter.cs" />
     <Compile Include="UserControls\DeviceInfoUserControl.xaml.cs">
       <DependentUpon>DeviceInfoUserControl.xaml</DependentUpon>
     </Compile>

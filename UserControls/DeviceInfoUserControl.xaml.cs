@@ -19,6 +19,9 @@ namespace EZInventory.UserControls {
 	/// Interaction logic for UserControl1.xaml
 	/// </summary>
 	public partial class DeviceInfoUserControl : UserControl {
+
+		protected DeviceInfo deviceInfo;
+
 		public DeviceInfoUserControl() {
 
 			InitializeComponent();
@@ -29,11 +32,14 @@ namespace EZInventory.UserControls {
 
 			InitializeComponent();
 
-			Manufacturer = info.Manufacturer + " (VID=" + info.VendorID + ")";
-			Model = info.Model + " (PID=" + info.DeviceID + ")";
+			deviceInfo = info;
+			Manufacturer = info.Manufacturer;
+			Model = info.Model;
 			SerialNumber = info.SerialNumber;
-			DriverName = info.DriverName;
+			DriverName = info.PNPEntityName ?? info.DriverName;
 			//Connected = info.Connected.ToString();
+			ProductID = info.ProductID;
+			VendorID = info.VendorID;
 
 			DeviceConnected.Background = info.Connected ? Brushes.Green :  Brushes.Red;
 
@@ -53,6 +59,8 @@ namespace EZInventory.UserControls {
 
 		public string Title { get; set; }
 
+		public string ProductID { get; set; }
 
+		public string VendorID { get; set; }
 	}
 }

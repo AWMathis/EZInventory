@@ -50,8 +50,9 @@ namespace EZInventory.InfoClasses{
 		public string SerialNumber;
 		public string DriverName;
 		public string VendorID;
-		public string DeviceID;
+		public string ProductID;
 		public bool Connected;
+		public string PNPEntityName;
 
 		public DeviceInfo() {
 			Manufacturer = "";
@@ -59,18 +60,20 @@ namespace EZInventory.InfoClasses{
 			SerialNumber = "";
 			DriverName = "";
 			VendorID = "";
-			DeviceID = "";
+			ProductID = "";
 			Connected = false;
+			PNPEntityName = "";
 		}
 
-		public DeviceInfo(string manufacturer, string model, string serial, string driverName, string vendorID, string deviceID, bool connected) {
+		public DeviceInfo(string manufacturer, string model, string serial, string driverName, string pnpEntityName, string vendorID, string productID, bool connected) {
 			Manufacturer = manufacturer;
 			Model = model;
 			SerialNumber = serial;
 			DriverName = driverName;
 			VendorID = vendorID;
-			DeviceID = deviceID;
+			ProductID = productID;
 			Connected = connected;
+			PNPEntityName = pnpEntityName;
 		}
 	}
 

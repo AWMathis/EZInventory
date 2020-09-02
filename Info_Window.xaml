@@ -17,11 +17,26 @@
 	<Grid>
 
 		<Grid.RowDefinitions>
+			<RowDefinition Height="Auto"/>
 			<RowDefinition Height="*"/>
 			<RowDefinition Height="Auto"/>
 		</Grid.RowDefinitions>
+
+		<DockPanel>
+			<Menu DockPanel.Dock="Top">
+				<MenuItem Header="_File">
+					<MenuItem Header="New - TOTO"/>
+					<MenuItem Header="Export - TODO"/>
+					<MenuItem Header="Exit - TODO"/>
+				</MenuItem>
+				<MenuItem Header="Options">
+					<MenuItem x:Name="DecryptHexMenuItem" Header="Decrypt Hex Serial Numbers" IsCheckable="True" IsChecked="True" ToolTip="Detect and decrypt hexadecimal serial numbers. If you recieve odd results, turn this off"/>
+				</MenuItem>
+			</Menu>
+		</DockPanel>
 		
-		<ScrollViewer Grid.Row="0" VerticalScrollBarVisibility="Auto">
+		
+		<ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
 
 			<Grid>
 				<Grid.Background>
@@ -116,7 +131,7 @@
 			</Grid>
 		</ScrollViewer>
 
-		<DockPanel Grid.Row="1">
+		<DockPanel Grid.Row="2">
 			<StatusBar DockPanel.Dock="Bottom">
 				<StatusBarItem>
 					<TextBlock x:Name="StatusBarText">Current Status Goes Here</TextBlock>

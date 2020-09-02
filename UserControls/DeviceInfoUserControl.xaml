@@ -24,7 +24,14 @@
 				</Grid.RowDefinitions>
 
 				<GroupBox Grid.Row="0" Grid.Column="1" Header="Model" HorizontalAlignment="Stretch" Margin="0,0,0,0" Foreground="Yellow">
-					<TextBox x:Name="DeviceModel" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding Model}"/>
+					<TextBox x:Name="DeviceModel" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding Model}">
+						<TextBox.ToolTip>
+							<TextBlock>
+								<Run Text="PID = "/>
+								<Run Text="{Binding ProductID}"/>
+							</TextBlock>
+						</TextBox.ToolTip>
+					</TextBox>
 				</GroupBox>
 
 				<GroupBox Grid.Row="0" Grid.Column="2" Header="Serial Number" HorizontalAlignment="Stretch" Margin="2,0,0,0" Foreground="Pink">
@@ -32,7 +39,16 @@
 				</GroupBox>
 
 				<GroupBox Grid.Row="1" Grid.Column="1" Header="Manufacturer" HorizontalAlignment="Stretch" Margin="0,0,0,0" Foreground="Yellow">
-					<TextBox x:Name="DeviceManufacturer" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding Manufacturer}"/>
+					<TextBox x:Name="DeviceManufacturer" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding Manufacturer}">
+						<TextBox.ToolTip>
+							<TextBlock>
+								<Run Text="VID = "/>
+								<Run Text="{Binding VendorID}"/>
+							</TextBlock>
+						</TextBox.ToolTip>
+					</TextBox>
+	
+
 				</GroupBox>
 
 				<GroupBox Grid.Row="1" Grid.Column="2" Header="Driver/Device Name(s)" HorizontalAlignment="Stretch" Margin="2,0,0,0" Foreground="Pink">
