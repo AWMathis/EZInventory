@@ -29,6 +29,7 @@ namespace EZInventory.UserControls {
 			Manufacturer = info.Manufacturer;
 			Model = info.Model;
 			SerialNumber = info.SerialNumber;
+			ProductID = info.ProductID;
 
 			InitializeComponent();
 			this.DataContext = this;
@@ -42,6 +43,6 @@ namespace EZInventory.UserControls {
 
 		public string Title { get; set; }
 
-
+		public string ProductID { get; set; }
 	}
 }

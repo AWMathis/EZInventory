@@ -30,16 +30,19 @@ namespace EZInventory.InfoClasses{
 		public string Manufacturer;
 		public string Model;
 		public string SerialNumber;
+		public string ProductID;
 
 		public MonitorInfo() {
 			Manufacturer = "";
 			Model = "";
 			SerialNumber = "";
+			ProductID = "";
 		}
-		public MonitorInfo(string manufacturer, string model, string serial) {
+		public MonitorInfo(string manufacturer, string model, string serial, string productID) {
 			Manufacturer = manufacturer;
 			Model = model;
 			SerialNumber = serial;
+			ProductID = productID;
 		}
 
 	}

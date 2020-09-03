@@ -56,12 +56,8 @@ namespace EZInventory.InfoClasses {
 			ManagementObjectCollection monitors = WMIQuery(computer, "WMIMonitorID");
 
 			if (monitors != null) {
-				Console.WriteLine("Monitors != null");
-				int monitorCount = 0;
 
 				foreach (ManagementObject monitor in monitors) {
-
-					string monitorManufacturer = "";
 
 					string monitorModel = "";
 					foreach (UInt16 i in (UInt16[])monitor["UserFriendlyName"]) {
@@ -73,7 +69,17 @@ namespace EZInventory.InfoClasses {
 						monitorSerial += (char)i;
 					}
 
-					monitorInfos.Add(new MonitorInfo(monitorManufacturer, monitorModel, monitorSerial));
+					string monitorPID = "";
+					foreach (UInt16 i in (UInt16[])monitor["ProductCodeID"]) {
+						monitorPID += (char)i;
+					}
+
+					string monitorManufacturer = "";
+					foreach (UInt16 i in (UInt16[])monitor["ManufacturerName"]) {
+						monitorManufacturer += (char)i;
+					}
+
+					monitorInfos.Add(new MonitorInfo(monitorManufacturer, monitorModel, monitorSerial, monitorPID));
 
 				}
 			}

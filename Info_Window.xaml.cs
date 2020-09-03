@@ -33,9 +33,6 @@ pnputil /enum-devices /disconnected can kinda do it... get-pnpdevice works too..
 get-pnpdevice uses the System.Management.Automation.InvocationInfo namespace... maybe there's something there?
 Registry keys have a DeviceDesc property, can we rely on that?
  * 
- * 
- * tooltips for VID/PID?
- * 
  * Export to csv?
  * 
  * Multiple tabs for multiple computers?
@@ -49,6 +46,7 @@ namespace EZInventory {
 		private InfoGetter infoGetter = new InfoGetter();
 
 		private bool DecryptHexMenuItemChecked;
+		private bool ShowDisconnectedChecked;
 
 		public Info_Window() {
 			InitializeComponent();
@@ -84,6 +82,7 @@ namespace EZInventory {
 			}
 
 			DecryptHexMenuItemChecked = DecryptHexMenuItem.IsChecked;
+			ShowDisconnectedChecked = ShowDisconnected.IsChecked;
 			MonitorInfoStackPanel.Children.Clear();
 			DeviceInfoStackPanel.Children.Clear();
 
@@ -177,6 +176,11 @@ namespace EZInventory {
 			int deviceCount = 1;
 
 			foreach (DeviceInfo device in deviceInfos) {
+
+				if (!device.Connected && ShowDisconnectedChecked == false) {
+					continue;
+				}
+
 				DeviceInfoUserControl info = new DeviceInfoUserControl(device);
 				info.Title = "Device " + deviceCount;
 

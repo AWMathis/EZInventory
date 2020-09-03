@@ -31,6 +31,7 @@
 				</MenuItem>
 				<MenuItem Header="Options">
 					<MenuItem x:Name="DecryptHexMenuItem" Header="Decrypt Hex Serial Numbers" IsCheckable="True" IsChecked="True" ToolTip="Detect and decrypt hexadecimal serial numbers. If you recieve odd results, turn this off"/>
+					<MenuItem x:Name="ShowDisconnected" Header="Show Disconnected" IsCheckable="True" IsChecked="True" ToolTip="Show or hide disconnected devices when searching"/>
 				</MenuItem>
 			</Menu>
 		</DockPanel>
