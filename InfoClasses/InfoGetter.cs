@@ -41,10 +41,11 @@ namespace EZInventory.InfoClasses {
 
 			string name = computerInfo["Name"].ToString();
 			string address = computerIP;
+			string manufacturer = computerInfo["Manufacturer"].ToString();
 			string model = (computerInfo["Manufacturer"].ToString()) + " " + (computerInfo["Model"].ToString());
 			string serial = biosInfo["SerialNumber"].ToString();
 			string version = windowsInfo["Caption"] + " " + windowsInfo["OSArchitecture"] + " (" + windowsInfo["Version"] + ")";
-			ComputerInfo info = new ComputerInfo(name, address, model, serial, version);
+			ComputerInfo info = new ComputerInfo(name, address, manufacturer, model, serial, version);
 			return info;
 		}
 

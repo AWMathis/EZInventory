@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using CsvHelper.Configuration;
+using System.Collections.Generic;
 using System.Windows.Documents;
 
 namespace EZInventory.InfoClasses{
@@ -8,17 +9,20 @@ namespace EZInventory.InfoClasses{
 		public string Model;
 		public string SerialNumber;
 		public string WindowsVersion;
+		public string Manufacturer;
 
-		public ComputerInfo(string name, string address, string model, string serial, string version) {
-			ComputerName = name;
-			IPAddress = address;
-			Model = model;
-			SerialNumber = serial;
-			WindowsVersion = version;
+		public ComputerInfo(string name, string address, string manufacturer, string model, string serial, string version) {
+			ComputerName = (name ?? "").Trim(); ;
+			IPAddress = (address ?? "").Trim(); ;
+			Model = (model ?? "").Trim(); ;
+			Manufacturer = (manufacturer ?? "").Trim(); ;
+			SerialNumber = (serial ?? "").Trim(); ;
+			WindowsVersion = (version ?? "").Trim(); ;
 		}
 		public ComputerInfo() {
 			ComputerName = "";
 			IPAddress = "";
+			Manufacturer = "";
 			Model = "";
 			SerialNumber = "";
 			WindowsVersion = "";
@@ -39,10 +43,10 @@ namespace EZInventory.InfoClasses{
 			ProductID = "";
 		}
 		public MonitorInfo(string manufacturer, string model, string serial, string productID) {
-			Manufacturer = manufacturer;
-			Model = model;
-			SerialNumber = serial;
-			ProductID = productID;
+			Manufacturer = (manufacturer ?? "").Trim();
+			Model = (model ?? "").Trim();
+			SerialNumber = (serial ?? "").Trim();
+			ProductID = (productID ?? "").Trim();
 		}
 
 	}
@@ -69,14 +73,14 @@ namespace EZInventory.InfoClasses{
 		}
 
 		public DeviceInfo(string manufacturer, string model, string serial, string driverName, string pnpEntityName, string vendorID, string productID, bool connected) {
-			Manufacturer = manufacturer;
-			Model = model;
-			SerialNumber = serial;
-			DriverName = driverName;
-			VendorID = vendorID;
-			ProductID = productID;
+			Manufacturer = (manufacturer ?? "").Trim();
+			Model = (model ?? "").Trim();
+			SerialNumber = (serial ?? "").Trim();
+			DriverName = (driverName ?? "").Trim();
+			VendorID = (vendorID ?? "").Trim();
+			ProductID = (productID ?? "").Trim();
 			Connected = connected;
-			PNPEntityName = pnpEntityName;
+			PNPEntityName = (pnpEntityName ?? "").Trim();
 		}
 	}
 
@@ -113,5 +117,48 @@ namespace EZInventory.InfoClasses{
 			Name = deviceName;
 		}
 
+	}
+
+	public class CSVInfo {
+		public string ComputerName;
+		public string DeviceType;
+		public string Manufacturer;
+		public string Model;
+		public string DriverName;
+		public string PNPEntityName;
+		public string SerialNumber;
+		public string CurrentlyConnected;
+		public string PID;
+		public string VID;
+
+		public CSVInfo(string computer, string type, string manufacturer, string model, string driverName, string entityName, string serial, string connected, string pid, string vid) {
+			ComputerName = computer;
+			DeviceType = type;
+			Manufacturer = manufacturer;
+			Model = model;
+			DriverName = driverName;
+			PNPEntityName = entityName;
+			SerialNumber = serial;
+			CurrentlyConnected = connected;
+			PID = pid;
+			VID = vid;
+		}
+
+
+	}
+
+	public class CSVInfoMap : ClassMap<CSVInfo> {
+		public CSVInfoMap() {
+			Map(m => m.ComputerName).Index(0).Name("Computer Name");
+			Map(m => m.DeviceType).Index(1).Name("Device Type");
+			Map(m => m.Manufacturer).Index(2).Name("Manufacturer");
+			Map(m => m.Model).Index(3).Name("Model");
+			Map(m => m.DriverName).Index(4).Name("Driver Name");
+			Map(m => m.PNPEntityName).Index(5).Name("PNP Entity Name");
+			Map(m => m.SerialNumber).Index(6).Name("Serial Number");
+			Map(m => m.CurrentlyConnected).Index(7).Name("Currently Connected");
+			Map(m => m.PID).Index(8).Name("Product ID (PID)");
+			Map(m => m.VID).Index(9).Name("Vendor ID (VID)");
+		}
 	}
 }

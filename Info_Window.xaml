@@ -26,7 +26,7 @@
 			<Menu DockPanel.Dock="Top">
 				<MenuItem Header="_File">
 					<MenuItem Header="New - TOTO"/>
-					<MenuItem Header="Export - TODO"/>
+					<MenuItem x:Name="ExportMenuItem" Click="ExportMenuItem_Click" Header="Export" ToolTip="Export values to a CSV file"/>
 					<MenuItem Header="Exit - TODO"/>
 				</MenuItem>
 				<MenuItem Header="Options">

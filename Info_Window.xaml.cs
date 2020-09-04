@@ -44,9 +44,14 @@ namespace EZInventory {
 	public partial class Info_Window : Window {
 
 		private InfoGetter infoGetter = new InfoGetter();
+		private CSVWriter writer = new CSVWriter();
 
 		private bool DecryptHexMenuItemChecked;
 		private bool ShowDisconnectedChecked;
+
+		private ComputerInfo computerInfo;
+		private List<MonitorInfo> monitorInfoList;
+		private List<DeviceInfo> deviceInfoList;
 
 		public Info_Window() {
 			InitializeComponent();
@@ -55,13 +60,8 @@ namespace EZInventory {
 			ComputerName.Focus();
 		}
 
-		public void SetValues(ComputerInfo info) {
-			ComputerName.Text = info.ComputerName;
-			IPAddress.Text = info.IPAddress;
-			ComputerModel.Text = info.Model;
-			SerialNumber.Text = info.SerialNumber;
-			WindowsVersion.Text = info.WindowsVersion;
-
+		private void ExportMenuItem_Click(object sender, RoutedEventArgs e) {
+			writer.WriteCSV(computerInfo, monitorInfoList, deviceInfoList);
 		}
 
 		private void SearchButton_Click(object sender, RoutedEventArgs e) {
@@ -135,7 +135,7 @@ namespace EZInventory {
 				case 2:
 					StatusBarText.Text = "Querying Monitor Info...";
 					ComputerInfo computerInfo = (ComputerInfo)e.UserState;
-					SetValues(computerInfo);
+					DisplayComputerInfo(computerInfo);
 					break;
 				case 3:
 					StatusBarText.Text = "Querying Device Info... (this might take a minute)";
@@ -157,7 +157,20 @@ namespace EZInventory {
 			StatusBarText.Text = "Ready";
 		}
 
+		public void DisplayComputerInfo(ComputerInfo info) {
+			computerInfo = info;
+
+			ComputerName.Text = info.ComputerName;
+			IPAddress.Text = info.IPAddress;
+			ComputerModel.Text = info.Model;
+			SerialNumber.Text = info.SerialNumber;
+			WindowsVersion.Text = info.WindowsVersion;
+
+		}
+
 		private void DisplayMonitorInfo(List<MonitorInfo> monitorInfos) {
+
+			monitorInfoList = monitorInfos;
 
 			MonitorInfoStackPanel.Children.Clear();
 
@@ -171,6 +184,8 @@ namespace EZInventory {
 		}
 
 		private void DisplayDeviceInfo(List<DeviceInfo> deviceInfos) {
+
+			deviceInfoList = deviceInfos;
 
 			DeviceInfoStackPanel.Children.Clear();
 			int deviceCount = 1;
@@ -189,6 +204,7 @@ namespace EZInventory {
 				DeviceInfoStackPanel.Children.Add(info);
 			}
 		}
+
 
 	}
 }
