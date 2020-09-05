@@ -37,6 +37,13 @@ Registry keys have a DeviceDesc property, can we rely on that?
  * 
  * Multiple tabs for multiple computers?
 
+Make sure exporting follows the “show disconnected devices” and “decode serials” rules
+
+Make UI update when options are changed
+
+Add devices even if serial can’t be found but VID/PID are matched.
+
+Add option to exclude “USB Mass Storage Device” driver names
  */
 
 namespace EZInventory {
@@ -46,12 +53,9 @@ namespace EZInventory {
 		private InfoGetter infoGetter = new InfoGetter();
 		private CSVWriter writer = new CSVWriter();
 
-		private bool DecryptHexMenuItemChecked;
-		private bool ShowDisconnectedChecked;
-
-		private ComputerInfo computerInfo;
-		private List<MonitorInfo> monitorInfoList;
-		private List<DeviceInfo> deviceInfoList;
+		private ComputerInfo computerInfo = new ComputerInfo();
+		private List<MonitorInfo> monitorInfoList = new List<MonitorInfo>();
+		private List<DeviceInfo> deviceInfoList = new List<DeviceInfo>();
 
 		public Info_Window() {
 			InitializeComponent();
@@ -61,7 +65,15 @@ namespace EZInventory {
 		}
 
 		private void ExportMenuItem_Click(object sender, RoutedEventArgs e) {
-			writer.WriteCSV(computerInfo, monitorInfoList, deviceInfoList);
+			writer.WriteCSV(DisplayComputerInfo(), DisplayMonitorInfo(), DisplayDeviceInfo());
+		}
+
+		private void DecryptHexMenuItem_Click(object sender, RoutedEventArgs e) {
+			DisplayDeviceInfo();
+		}
+
+		private void ShowDisconnectedMenuItem_Click(object sender, RoutedEventArgs e) {
+			DisplayDeviceInfo();
 		}
 
 		private void SearchButton_Click(object sender, RoutedEventArgs e) {
@@ -81,8 +93,6 @@ namespace EZInventory {
 				Console.WriteLine("Searching by hostname...");
 			}
 
-			DecryptHexMenuItemChecked = DecryptHexMenuItem.IsChecked;
-			ShowDisconnectedChecked = ShowDisconnected.IsChecked;
 			MonitorInfoStackPanel.Children.Clear();
 			DeviceInfoStackPanel.Children.Clear();
 
@@ -121,7 +131,7 @@ namespace EZInventory {
 				List<MonitorInfo> monitorInfos = infoGetter.GetMonitorInfo(computer);
 
 				(sender as BackgroundWorker).ReportProgress(3, monitorInfos);
-				List<DeviceInfo> deviceInfos = infoGetter.GetDeviceInfoRegistry(computer, DecryptHexMenuItemChecked);
+				List<DeviceInfo> deviceInfos = infoGetter.GetDeviceInfoRegistry(computer);
 
 				(sender as BackgroundWorker).ReportProgress(4, deviceInfos);
 			}
@@ -134,16 +144,18 @@ namespace EZInventory {
 					break;
 				case 2:
 					StatusBarText.Text = "Querying Monitor Info...";
-					ComputerInfo computerInfo = (ComputerInfo)e.UserState;
-					DisplayComputerInfo(computerInfo);
+					computerInfo = (ComputerInfo)e.UserState;
+					DisplayComputerInfo();
 					break;
 				case 3:
 					StatusBarText.Text = "Querying Device Info... (this might take a minute)";
-					DisplayMonitorInfo((List<MonitorInfo>)e.UserState);
+					monitorInfoList = (List<MonitorInfo>)e.UserState;
+					DisplayMonitorInfo();
 					break;
 				case 4:
 					StatusBarText.Text = "Populating Device Info...";
-					DisplayDeviceInfo((List<DeviceInfo>)e.UserState);
+					deviceInfoList = (List<DeviceInfo>)e.UserState;
+					DisplayDeviceInfo();
 					break;
 				default:
 					StatusBarText.Text = "Error: Unknown BackgroundWorker state";
@@ -157,43 +169,60 @@ namespace EZInventory {
 			StatusBarText.Text = "Ready";
 		}
 
-		public void DisplayComputerInfo(ComputerInfo info) {
-			computerInfo = info;
+		public ComputerInfo DisplayComputerInfo() {
 
-			ComputerName.Text = info.ComputerName;
-			IPAddress.Text = info.IPAddress;
-			ComputerModel.Text = info.Model;
-			SerialNumber.Text = info.SerialNumber;
-			WindowsVersion.Text = info.WindowsVersion;
+			ComputerName.Text = computerInfo.ComputerName;
+			IPAddress.Text = computerInfo.IPAddress;
+			ComputerModel.Text = computerInfo.Model;
+			SerialNumber.Text = computerInfo.SerialNumber;
+			WindowsVersion.Text = computerInfo.WindowsVersion;
 
+			return computerInfo;
 		}
 
-		private void DisplayMonitorInfo(List<MonitorInfo> monitorInfos) {
-
-			monitorInfoList = monitorInfos;
+		private List<MonitorInfo> DisplayMonitorInfo() {
 
 			MonitorInfoStackPanel.Children.Clear();
 
+			List<MonitorInfo> monitorInfoListModified = new List<MonitorInfo>(monitorInfoList.Count); //Perform a deep copy to allow different display options without modifying the data
+			foreach (MonitorInfo info in monitorInfoList) {
+				monitorInfoListModified.Add(new MonitorInfo(info));
+			}
+
 			int monitorCount = 1;
-			foreach (MonitorInfo monitor in monitorInfos) {
+			foreach (MonitorInfo monitor in monitorInfoList) {
+
+				if (DecryptHexMenuItem.IsChecked) {
+					monitor.SerialNumber = infoGetter.TestForHex(monitor.SerialNumber);
+				}
+
 				MonitorInfoUserControl info = new MonitorInfoUserControl(monitor);
 				info.Title = "Monitor " + monitorCount;
 				monitorCount++;
 				MonitorInfoStackPanel.Children.Add(info);
 			}
+
+			return monitorInfoListModified;
 		}
 
-		private void DisplayDeviceInfo(List<DeviceInfo> deviceInfos) {
-
-			deviceInfoList = deviceInfos;
+		private List<DeviceInfo> DisplayDeviceInfo() {
 
 			DeviceInfoStackPanel.Children.Clear();
 			int deviceCount = 1;
 
-			foreach (DeviceInfo device in deviceInfos) {
+			List<DeviceInfo> deviceInfoListModified = new List<DeviceInfo>(deviceInfoList.Count); //Perform a deep copy to allow different display options without modifying the data
+			foreach (DeviceInfo info in deviceInfoList) {
+				deviceInfoListModified.Add(new DeviceInfo(info));
+			}
 
-				if (!device.Connected && ShowDisconnectedChecked == false) {
-					continue;
+			if (ShowDisconnectedMenuItem.IsChecked == false) {
+				deviceInfoListModified.RemoveAll(DeviceDisconnected);
+			}
+
+			foreach (DeviceInfo device in deviceInfoListModified) {
+
+				if (DecryptHexMenuItem.IsChecked) {
+					device.SerialNumber = infoGetter.TestForHex(device.SerialNumber);
 				}
 
 				DeviceInfoUserControl info = new DeviceInfoUserControl(device);
@@ -203,8 +232,11 @@ namespace EZInventory {
 
 				DeviceInfoStackPanel.Children.Add(info);
 			}
+
+			return deviceInfoListModified;
 		}
-
-
+		private bool DeviceDisconnected(DeviceInfo e) {
+			return !(e.Connected);
+		}
 	}
 }

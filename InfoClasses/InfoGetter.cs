@@ -13,7 +13,6 @@ namespace EZInventory.InfoClasses {
 	class InfoGetter {
 
 		private Dictionary<string, VendorInfo> usbIDDictionary;
-		public bool DecryptHex { get; set; }
 
 		public InfoGetter() {
 			usbIDDictionary = new Dictionary<string, VendorInfo>();
@@ -88,9 +87,7 @@ namespace EZInventory.InfoClasses {
 			return monitorInfos;
 		}
 
-		public List<DeviceInfo> GetDeviceInfoRegistry(string computer, bool decryptHex) {
-
-			DecryptHex = decryptHex;
+		public List<DeviceInfo> GetDeviceInfoRegistry(string computer) {
 
 			List<DeviceInfo> deviceInfos = new List<DeviceInfo>();
 			List<string> deviceIDs = new List<string>();
@@ -180,13 +177,7 @@ namespace EZInventory.InfoClasses {
 					model = "?????";
 				}
 
-				string serial;
-				if (DecryptHex) {
-					serial = TestForHex(serialNumbers[i]);
-				} else {
-					serial = serialNumbers[i];
-				}
-				
+				string serial = serialNumbers[i];	
 
 				string driverName = driverNames[i];
 
@@ -294,7 +285,7 @@ namespace EZInventory.InfoClasses {
 		}
 
 		//Apparently some serials can be encoded as hexidecimal (at least usbdeview has an option saying so). This tests the string to see if it's probably in hex and if so converts it to ASCII
-		private string TestForHex(string testString) {
+		public string TestForHex(string testString) {
 
 			char[] chars = testString.ToCharArray();
 
@@ -302,7 +293,7 @@ namespace EZInventory.InfoClasses {
 
 			for (int i = 0; i < chars.Length; i += 2) {
 				if ((chars[i] >= 50) && (chars[i] <= 55)) { //if ascii values could plausably be a string (no normally hidden characters) checks for 2-7
-					if ((chars[i + 1] >= 48) && (chars[i + 1] <= 122)) { //if ascii values could plausably be a string (no normally hidden characters) checks for 0-F
+					if ((chars[i + 1] >= 48) && (chars[i + 1] <= 70)) { //if ascii values could plausably be a string (no normally hidden characters) checks for 0-F
 						string temp = chars[i].ToString() + chars[i + 1].ToString();
 						ushort tempShort = System.Convert.ToUInt16(temp, 16);
 						char tempChar = System.Convert.ToChar(tempShort);

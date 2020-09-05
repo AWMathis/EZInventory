@@ -1,4 +1,5 @@
 ﻿using CsvHelper.Configuration;
+using System;
 using System.Collections.Generic;
 using System.Windows.Documents;
 
@@ -49,6 +50,16 @@ namespace EZInventory.InfoClasses{
 			ProductID = (productID ?? "").Trim();
 		}
 
+		public MonitorInfo(MonitorInfo info) {
+			Manufacturer = info.Manufacturer;
+			Model = info.Model;
+			SerialNumber = info.SerialNumber;
+			ProductID = info.ProductID;
+		}
+
+		public MonitorInfo Copy() {
+			return new MonitorInfo(this);
+		}
 	}
 
 	public class DeviceInfo {
@@ -82,6 +93,22 @@ namespace EZInventory.InfoClasses{
 			Connected = connected;
 			PNPEntityName = (pnpEntityName ?? "").Trim();
 		}
+
+		public DeviceInfo(DeviceInfo info) {
+			Manufacturer = info.Manufacturer;
+			Model = info.Model;
+			SerialNumber = info.SerialNumber;
+			DriverName = info.DriverName;
+			VendorID = info.VendorID;
+			ProductID = info.ProductID;
+			Connected = info.Connected;
+			PNPEntityName = info.PNPEntityName;
+		}
+
+		public DeviceInfo Copy() {
+			return new DeviceInfo(this);
+		}
+
 	}
 
 	public class VendorInfo {
