@@ -1,7 +1,7 @@
 ﻿EZInventory
 
 
-winexe
+exe
 C#
 .cs
 D:\Projects\WPF\EZInventory\EZInventory\obj\Debug\
@@ -12,7 +12,7 @@ DEBUG;TRACE
 D:\Projects\WPF\EZInventory\EZInventory\App.xaml
 4-1355250194
 
-121692826181
+121955107822
 1221740512741
 Info_Window.xaml;MainWindow.xaml;UserControls\DeviceInfoUserControl.xaml;UserControls\MonitorInfoUserControl.xaml;
 

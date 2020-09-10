@@ -21,6 +21,8 @@ using EZInventory.InfoClasses;
 using Microsoft.Win32;
 using System.IO;
 using System.Reflection;
+using CsvHelper;
+using EZInventory.CSVWriter;
 
 
 /*
@@ -32,37 +34,95 @@ Need a way to tell/sort by what’s connected. Maybe a last connected date value
 pnputil /enum-devices /disconnected can kinda do it... get-pnpdevice works too... so why TF can't you get disconnected devices through win32_pnpentity?!?!?!
 get-pnpdevice uses the System.Management.Automation.InvocationInfo namespace... maybe there's something there?
 Registry keys have a DeviceDesc property, can we rely on that?
- * 
- * Export to csv?
+
  * 
  * Multiple tabs for multiple computers?
-
-Make sure exporting follows the “show disconnected devices” and “decode serials” rules
-
-Make UI update when options are changed
 
 Add devices even if serial can’t be found but VID/PID are matched.
 
 Add option to exclude “USB Mass Storage Device” driver names
+
+Console output kinda sucks, maybe swap back to windowed application?
+
+Remove semicolon when searching by IP so you can do something like delete hostname and search again without editing IP. Even better, don’t use semicolon if there’s only one address
  */
 
 namespace EZInventory {
 
+	public struct InputArgs {
+		public string computerName;
+		public string ipAddress;
+		public string usbIDSPath;
+		public string outputPath;
+		public bool showDisconnected;
+		public bool decryptSerials;
+		public bool noGUI;
+	}
+
 	public partial class Info_Window : Window {
 
 		private InfoGetter infoGetter = new InfoGetter();
-		private CSVWriter writer = new CSVWriter();
+		private CSVWriterClass writer = new CSVWriterClass();
 
 		private ComputerInfo computerInfo = new ComputerInfo();
 		private List<MonitorInfo> monitorInfoList = new List<MonitorInfo>();
 		private List<DeviceInfo> deviceInfoList = new List<DeviceInfo>();
 
+		private (string, string, string, string) inputArgs;
+
 		public Info_Window() {
 			InitializeComponent();
+			infoGetter.ParseUSBIDs();
 			StatusBarText.Text = "Ready";
 
 			ComputerName.Focus();
 		}
+		public Info_Window(InputArgs args) {
+
+			infoGetter.USBIDSPath = args.usbIDSPath;
+			infoGetter.ParseUSBIDs();
+			Console.WriteLine();
+
+			if (!args.noGUI) {
+				InitializeComponent();
+				StatusBarText.Text = "Ready";
+
+				//apply variables from args here
+				ComputerName.Text = args.computerName ?? "";
+				IPAddress.Text = args.ipAddress ?? "";
+				DecryptHexMenuItem.IsChecked = args.decryptSerials;
+				ShowDisconnectedMenuItem.IsChecked = args.showDisconnected;
+
+				ComputerName.Focus();
+			} else {
+				Console.WriteLine("GUI is disabled, running in console only mode" + System.Environment.NewLine);
+
+				string computerName = args.computerName ?? System.Environment.MachineName;
+				Console.WriteLine("Searching info for computer \"" + computerName + "\"..." + System.Environment.NewLine + "------------------------------------------------------------------" + System.Environment.NewLine);
+				ComputerInfo computerInfo = infoGetter.GetComputerInfo(computerName);
+				Console.WriteLine(computerInfo.ToString());
+
+				monitorInfoList = infoGetter.GetMonitorInfo(computerName);
+				monitorInfoList = FilterMonitorInfo(monitorInfoList, args.decryptSerials);
+				foreach (MonitorInfo m in monitorInfoList) {
+					Console.WriteLine(m.ToString());
+				}
+
+				deviceInfoList = infoGetter.GetDeviceInfoRegistry(computerName);
+				deviceInfoList = FilterDeviceInfo(deviceInfoList, args.decryptSerials, args.showDisconnected);
+				foreach (DeviceInfo d in deviceInfoList) {
+					Console.WriteLine(d.ToString());
+				}
+
+				if (args.outputPath != null) {
+					writer.WriteCSV(computerInfo, monitorInfoList, deviceInfoList, args.outputPath);
+				}
+
+				//run a search and write out whatever, export to csv if appropriate
+				System.Windows.Application.Current.Shutdown();
+			}
+			
+	}
 
 		private void ExportMenuItem_Click(object sender, RoutedEventArgs e) {
 			writer.WriteCSV(DisplayComputerInfo(), DisplayMonitorInfo(), DisplayDeviceInfo());
@@ -180,21 +240,33 @@ namespace EZInventory {
 			return computerInfo;
 		}
 
+		private List<MonitorInfo> FilterMonitorInfo(List<MonitorInfo> toFilter, bool decryptHex) {
+			List<MonitorInfo> monitorInfoListModified = new List<MonitorInfo>(toFilter.Count); //Perform a deep copy to allow different display options without modifying the data
+			foreach (MonitorInfo info in toFilter) {
+				monitorInfoListModified.Add(new MonitorInfo(info));
+			}
+
+
+			foreach (MonitorInfo monitor in monitorInfoListModified) {
+
+				if (decryptHex) {
+					monitor.SerialNumber = infoGetter.TestForHex(monitor.SerialNumber);
+				}
+
+
+			}
+
+			return monitorInfoListModified;
+		}
+
 		private List<MonitorInfo> DisplayMonitorInfo() {
 
 			MonitorInfoStackPanel.Children.Clear();
 
-			List<MonitorInfo> monitorInfoListModified = new List<MonitorInfo>(monitorInfoList.Count); //Perform a deep copy to allow different display options without modifying the data
-			foreach (MonitorInfo info in monitorInfoList) {
-				monitorInfoListModified.Add(new MonitorInfo(info));
-			}
+			List<MonitorInfo> monitorInfoListModified = FilterMonitorInfo(monitorInfoList, DecryptHexMenuItem.IsChecked);
 
 			int monitorCount = 1;
 			foreach (MonitorInfo monitor in monitorInfoList) {
-
-				if (DecryptHexMenuItem.IsChecked) {
-					monitor.SerialNumber = infoGetter.TestForHex(monitor.SerialNumber);
-				}
 
 				MonitorInfoUserControl info = new MonitorInfoUserControl(monitor);
 				info.Title = "Monitor " + monitorCount;
@@ -205,25 +277,33 @@ namespace EZInventory {
 			return monitorInfoListModified;
 		}
 
-		private List<DeviceInfo> DisplayDeviceInfo() {
+		private List<DeviceInfo> FilterDeviceInfo(List<DeviceInfo> toFilter, bool decryptHex, bool showDisconnected) {
 
-			DeviceInfoStackPanel.Children.Clear();
-			int deviceCount = 1;
-
-			List<DeviceInfo> deviceInfoListModified = new List<DeviceInfo>(deviceInfoList.Count); //Perform a deep copy to allow different display options without modifying the data
-			foreach (DeviceInfo info in deviceInfoList) {
+			List<DeviceInfo> deviceInfoListModified = new List<DeviceInfo>(toFilter.Count); //Perform a deep copy to allow different display options without modifying the data
+			foreach (DeviceInfo info in toFilter) {
 				deviceInfoListModified.Add(new DeviceInfo(info));
 			}
 
-			if (ShowDisconnectedMenuItem.IsChecked == false) {
+			if (showDisconnected == false) {
 				deviceInfoListModified.RemoveAll(DeviceDisconnected);
 			}
 
 			foreach (DeviceInfo device in deviceInfoListModified) {
-
-				if (DecryptHexMenuItem.IsChecked) {
+				if (decryptHex) {
 					device.SerialNumber = infoGetter.TestForHex(device.SerialNumber);
 				}
+			}
+
+			return deviceInfoListModified;
+		}
+
+		private List<DeviceInfo> DisplayDeviceInfo() {
+
+			DeviceInfoStackPanel.Children.Clear();
+			int deviceCount = 1;
+			List<DeviceInfo> deviceInfoListModified = FilterDeviceInfo(deviceInfoList, DecryptHexMenuItem.IsChecked, ShowDisconnectedMenuItem.IsChecked);
+
+			foreach (DeviceInfo device in deviceInfoListModified) {
 
 				DeviceInfoUserControl info = new DeviceInfoUserControl(device);
 				info.Title = "Device " + deviceCount;

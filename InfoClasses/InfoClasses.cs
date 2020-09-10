@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Windows.Documents;
+using System.Windows.Media.TextFormatting;
 
 namespace EZInventory.InfoClasses{
 	public class ComputerInfo {
@@ -29,7 +30,22 @@ namespace EZInventory.InfoClasses{
 			WindowsVersion = "";
 		}
 
+		public override string ToString() {
+			string ret = "";
+			string nl = System.Environment.NewLine;
+
+			ret += "Computer Name: " + ComputerName + nl;
+			ret += "IP Address: " + IPAddress + nl;
+			ret += "Manufacturer: " + Manufacturer + nl;
+			ret += "Model: " + Model + nl;
+			ret += "Serial Number: " + SerialNumber + nl;
+			ret += "Windows Version: " + WindowsVersion + nl;
+
+			return ret;
+		}
 	}
+
+}
 
 	public class MonitorInfo {
 		public string Manufacturer;
@@ -60,7 +76,20 @@ namespace EZInventory.InfoClasses{
 		public MonitorInfo Copy() {
 			return new MonitorInfo(this);
 		}
-	}
+
+
+		public override string ToString() {
+			string ret = "";
+			string nl = System.Environment.NewLine;
+
+			ret += "Manufacturer: " + Manufacturer + nl;
+			ret += "Model: " + Model + nl;
+			ret += "Serial Number: " + SerialNumber + nl;
+			ret += "Product ID (PID): " + ProductID + nl;
+
+			return ret;
+		}
+}
 
 	public class DeviceInfo {
 		public string Manufacturer;
@@ -109,7 +138,24 @@ namespace EZInventory.InfoClasses{
 			return new DeviceInfo(this);
 		}
 
-	}
+		public override string ToString() {
+			string ret = "";
+			string nl = System.Environment.NewLine;
+
+			ret += "Manufacturer: " + Manufacturer + nl;
+			ret += "Model: " + Model + nl;
+			ret += "Serial Number: " + SerialNumber + nl;
+			ret += "Driver Name: " + DriverName + nl;
+			ret += "PNP Entity Name: " + PNPEntityName + nl;
+			ret += "Vendor ID (VID): " + VendorID + nl;
+			ret += "Product ID (PID): " + ProductID + nl;
+			ret += "Connected: " + Connected + nl;
+			
+
+		return ret;
+		}
+
+}
 
 	public class VendorInfo {
 		public string ID;
@@ -146,46 +192,3 @@ namespace EZInventory.InfoClasses{
 
 	}
 
-	public class CSVInfo {
-		public string ComputerName;
-		public string DeviceType;
-		public string Manufacturer;
-		public string Model;
-		public string DriverName;
-		public string PNPEntityName;
-		public string SerialNumber;
-		public string CurrentlyConnected;
-		public string PID;
-		public string VID;
-
-		public CSVInfo(string computer, string type, string manufacturer, string model, string driverName, string entityName, string serial, string connected, string pid, string vid) {
-			ComputerName = computer;
-			DeviceType = type;
-			Manufacturer = manufacturer;
-			Model = model;
-			DriverName = driverName;
-			PNPEntityName = entityName;
-			SerialNumber = serial;
-			CurrentlyConnected = connected;
-			PID = pid;
-			VID = vid;
-		}
-
-
-	}
-
-	public class CSVInfoMap : ClassMap<CSVInfo> {
-		public CSVInfoMap() {
-			Map(m => m.ComputerName).Index(0).Name("Computer Name");
-			Map(m => m.DeviceType).Index(1).Name("Device Type");
-			Map(m => m.Manufacturer).Index(2).Name("Manufacturer");
-			Map(m => m.Model).Index(3).Name("Model");
-			Map(m => m.DriverName).Index(4).Name("Driver Name");
-			Map(m => m.PNPEntityName).Index(5).Name("PNP Entity Name");
-			Map(m => m.SerialNumber).Index(6).Name("Serial Number");
-			Map(m => m.CurrentlyConnected).Index(7).Name("Currently Connected");
-			Map(m => m.PID).Index(8).Name("Product ID (PID)");
-			Map(m => m.VID).Index(9).Name("Vendor ID (VID)");
-		}
-	}
-}

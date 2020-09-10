@@ -14,9 +14,12 @@ namespace EZInventory.InfoClasses {
 
 		private Dictionary<string, VendorInfo> usbIDDictionary;
 
+		private string _USBIDSPath;
+		public string USBIDSPath{ get; set; }
+
 		public InfoGetter() {
 			usbIDDictionary = new Dictionary<string, VendorInfo>();
-			ParseUSBIDs();
+
 		}
 
 		public ComputerInfo GetComputerInfo(string computer) {
@@ -191,18 +194,23 @@ namespace EZInventory.InfoClasses {
 			return deviceInfos;
 		}
 
-		private void ParseUSBIDs() {
 
-			if (usbIDDictionary.Count != 0) { //Makes this only run once, just in case
-				return;
-			}
+		public void ParseUSBIDs() {
+
+			usbIDDictionary.Clear();
 
 			//If it exists, use a usb.ids file in the same directory as the exe. It's updated fairly regularly so this will allow the program to remain relevant longer
 			string usbIDS = "";
-			if (File.Exists("usb.ids")) {
+
+			if (File.Exists(USBIDSPath)) {
+				Console.WriteLine("usb.ids file path supplied, will use that instead of embedded version");
+				usbIDS = System.IO.File.ReadAllText(USBIDSPath);
+			}
+			else if (File.Exists("usb.ids")) {
 				Console.WriteLine("usb.ids file detected, will use that instead of embedded version");
 				usbIDS = System.IO.File.ReadAllText("usb.ids");
-			} else {
+			}
+			else {
 				usbIDS = System.Text.Encoding.Default.GetString(Properties.Resources.usb);
 			}
 
@@ -256,7 +264,7 @@ namespace EZInventory.InfoClasses {
 					i++;
 				}
 			}
-
+			Console.WriteLine("usb.ids has finished parsing");
 		}
 
 		private (string mfg, string dev) DeviceIDLookup(string vendorID, string deviceID) {
