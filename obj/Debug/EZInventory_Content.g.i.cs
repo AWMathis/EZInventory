@@ -8,6 +8,6 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("miscfiles/usb.ids")]
+[assembly: System.Windows.Resources.AssemblyAssociatedContentFileAttribute("miscfiles/icon.svg")]
 
 

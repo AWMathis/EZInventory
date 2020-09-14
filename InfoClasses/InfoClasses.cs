@@ -1,8 +1,5 @@
-﻿using CsvHelper.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Windows.Documents;
-using System.Windows.Media.TextFormatting;
+﻿using System.Collections.Generic;
+
 
 namespace EZInventory.InfoClasses{
 	public class ComputerInfo {

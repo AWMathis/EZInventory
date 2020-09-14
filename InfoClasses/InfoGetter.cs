@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Management;
 using System.Net;
-using EZInventory.InfoClasses;
 using Microsoft.Win32;
 using System.IO;
 
@@ -13,8 +12,7 @@ namespace EZInventory.InfoClasses {
 	class InfoGetter {
 
 		private Dictionary<string, VendorInfo> usbIDDictionary;
-
-		private string _USBIDSPath;
+		private string unknownValue = "?????";
 		public string USBIDSPath{ get; set; }
 
 		public InfoGetter() {
@@ -31,8 +29,9 @@ namespace EZInventory.InfoClasses {
 			string computerIP = "";
 			int i = 0;
 			foreach (IPAddress a in addresses) {
-
-				computerIP += a.ToString() + "; "; ;
+				if (i > 0) { computerIP += "; "; }
+				computerIP += a.ToString();
+				i++;
 			}
 
 			ManagementObjectCollection biosInfoCollection = CIMQuery(computer, "Win32_Bios");
@@ -90,6 +89,25 @@ namespace EZInventory.InfoClasses {
 			return monitorInfos;
 		}
 
+		public List<MonitorInfo> FilterMonitorInfo(List<MonitorInfo> toFilter, bool decryptHex) {
+			List<MonitorInfo> monitorInfoListModified = new List<MonitorInfo>(toFilter.Count); //Perform a deep copy to allow different display options without modifying the data
+			foreach (MonitorInfo info in toFilter) {
+				monitorInfoListModified.Add(new MonitorInfo(info));
+			}
+
+
+			foreach (MonitorInfo monitor in monitorInfoListModified) {
+
+				if (decryptHex) {
+					monitor.SerialNumber = TestForHex(monitor.SerialNumber);
+				}
+
+
+			}
+
+			return monitorInfoListModified;
+		}
+
 		public List<DeviceInfo> GetDeviceInfoRegistry(string computer) {
 
 			List<DeviceInfo> deviceInfos = new List<DeviceInfo>();
@@ -104,26 +122,34 @@ namespace EZInventory.InfoClasses {
 
 			RegistryKey regKey = remoteReg.OpenSubKey("SYSTEM").OpenSubKey("CurrentControlSet").OpenSubKey("Enum").OpenSubKey("USB");
 
-			int deviceIndex = 0;
+			int deviceIndex = 0; //deviceIndex is the array index for the current device. If there's multiple subkeys, their values are merged into... say... deviceIDs[deviceIndex-1] which is for the last device added.
 			foreach (string keyName in regKey.GetSubKeyNames()) { //Search registry for previously connected USB devices
 
 				foreach (string subKeyName in regKey.OpenSubKey(keyName).GetSubKeyNames()) {
-					if (!subKeyName.Any(ch => !Char.IsLetterOrDigit(ch))) {
-						deviceIDs.Add(keyName); //deviceIDs.Add("USB\\" + keyName + "\\" + subKeyName);
-						serialNumbers.Add(subKeyName);
+
+					if ((keyName.Split('&').Length == 2)) {//if (!subKeyName.Any(ch => !Char.IsLetterOrDigit(ch))) {  //If subkey name could plausably be a serial number (no weird characters)
+						deviceIDs.Add(keyName);
+						if (!subKeyName.Any(ch => !Char.IsLetterOrDigit(ch))) { serialNumbers.Add(subKeyName); } else { serialNumbers.Add(unknownValue);  } 
+						
 						manufacturers.Add(regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("Mfg").ToString().Split(';')[1]);
 
 						driverNames.Add(regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("DeviceDesc").ToString().Split(';')[1]);
+
 						deviceIndex++;
+						break;
 					}
-					else if (keyName.Split('&').Length > 1) { //Add devices with same VID/PID but different after
-						if (deviceIDs.Contains(keyName.Split('&')[0] + "&" + keyName.Split('&')[1])) {
+					else if (keyName.Split('&').Length > 2) { //Add devices with same VID/PID but different after
+						if (deviceIDs.Contains(keyName.Split('&')[0] + "&" + keyName.Split('&')[1])) { //If VID/PID already exists (i.e. if this references an existing device)
 							string driverDesc = regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("DeviceDesc").ToString();
 							if (driverDesc.Split(';').Length > 1) {
-								driverNames[deviceIndex - 1] = driverDesc.Split(';')[1] + "; " + driverNames[deviceIndex - 1];
+								string driverName = driverDesc.Split(';')[1];
+								if (!driverNames[deviceIndex - 1].Contains(driverName)) { driverNames[deviceIndex - 1] = driverName + "; " + driverNames[deviceIndex - 1]; } //Prevent duplicate entries
+								//driverNames[deviceIndex - 1] = driverDesc.Split(';')[1] + "; " + driverNames[deviceIndex - 1];
 							}
 							else {
-								driverNames[deviceIndex - 1] = driverDesc + "; " + driverNames[deviceIndex - 1];
+								string driverName = driverDesc;
+								if (!driverNames[deviceIndex - 1].Contains(driverName)) { driverNames[deviceIndex - 1] = driverName + "; " + driverNames[deviceIndex - 1]; ; } //Prevent duplicate entries
+								//driverNames[deviceIndex - 1] = driverDesc + "; " + driverNames[deviceIndex - 1];
 							}
 
 						}
@@ -154,10 +180,17 @@ namespace EZInventory.InfoClasses {
 
 					int index = deviceIDs.IndexOf(entityDevice);
 					if (index != -1) {
+						string proposedEntityName = (string)entity.Properties["Name"].Value ?? (string)entity.Properties["Caption"].Value ?? (string)entity.Properties["Description"].Value;
+
 						if (entityNames[index] != null) {
-							entityNames[index] += ", ";
+							if (!entityNames[index].Contains(proposedEntityName)) { //Prevent duplicate entries
+								entityNames[index] += ", ";
+								entityNames[index] += proposedEntityName;
+							}
+						} else {
+							entityNames[index] += proposedEntityName;
 						}
-						entityNames[index] += (string)entity.Properties["Name"].Value ?? (string)entity.Properties["Caption"].Value ?? (string)entity.Properties["Description"].Value;
+
 					}
 				}
 			}
@@ -177,7 +210,7 @@ namespace EZInventory.InfoClasses {
 
 				string model = ret.dev;
 				if (model == null) {
-					model = "?????";
+					model = unknownValue;
 				}
 
 				string serial = serialNumbers[i];	
@@ -192,6 +225,38 @@ namespace EZInventory.InfoClasses {
 			}
 
 			return deviceInfos;
+		}
+
+		public List<DeviceInfo> FilterDeviceInfo(List<DeviceInfo> toFilter, bool decryptHex, bool showDisconnected, bool requireSerial, bool excludeMassStorage) {
+
+			List<DeviceInfo> deviceInfoListModified = new List<DeviceInfo>(toFilter.Count); //Perform a deep copy to allow different display options without modifying the data
+			foreach (DeviceInfo info in toFilter) {
+				deviceInfoListModified.Add(new DeviceInfo(info));
+			}
+
+			if (showDisconnected == false) {
+				deviceInfoListModified.RemoveAll(info => info.Connected == false);
+			}
+
+			if (requireSerial == true) {
+				deviceInfoListModified.RemoveAll(info => (info.SerialNumber == null) || (info.SerialNumber == "") || (info.SerialNumber == "?????"));
+			}
+
+			if (excludeMassStorage == true) {
+				deviceInfoListModified.RemoveAll(info => (info.DriverName == "USB Mass Storage Device") || (info.PNPEntityName == "USB Mass Storage Device"));
+			}
+
+			if(true) {
+				deviceInfoListModified.RemoveAll(info => (info.Model == "?????") || (info.Manufacturer == "?????"));
+			}
+
+			foreach (DeviceInfo device in deviceInfoListModified) {
+				if (decryptHex) {
+					device.SerialNumber = TestForHex(device.SerialNumber);
+				}
+			}
+
+			return deviceInfoListModified;
 		}
 
 

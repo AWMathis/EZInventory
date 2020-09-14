@@ -8,9 +8,18 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
 
+	<UserControl.Resources>
+		<SolidColorBrush x:Key="ModelColor" Color="Cyan"/>
+		<SolidColorBrush x:Key="SerialNumberColor" Color="LightGreen"/>
+		<Thickness x:Key="BorderThickness">3</Thickness>
+	</UserControl.Resources>
 
 	<Grid>
-		<GroupBox Header="{Binding Title}"  Margin="0,0,0,0" Foreground="Green" BorderBrush="Red">
+		<GroupBox Margin="0,0,0,1">
+
+			<GroupBox.Header>
+				<TextBlock Text="{Binding Title}"/>
+			</GroupBox.Header>
 
 			<Grid>
 				<Grid.ColumnDefinitions>
@@ -21,19 +30,35 @@
 					<RowDefinition Height="*"/>
 				</Grid.RowDefinitions>
 
-				<GroupBox Grid.Column="0" Header="Model" HorizontalAlignment="Stretch" Margin="0,0,0,0" Foreground="Yellow">
-					<TextBox x:Name="MonitorModel" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding Model}">
-						<TextBox.ToolTip>
-							<TextBlock>
+				<GroupBox Grid.Column="0" HorizontalAlignment="Stretch" Margin="0,0,0,0">
+
+					<GroupBox.Header>
+						<TextBlock Text="MODEL" HorizontalAlignment="Center"/>
+					</GroupBox.Header>
+
+					<Border BorderBrush="{StaticResource ModelColor}" BorderThickness="{StaticResource BorderThickness}">
+						<TextBox x:Name="MonitorModel" Margin="0,0,0,0" TextAlignment="Center" Padding="0,0,0,0" FontSize="20" Text="{Binding Model}" IsReadOnly="True" BorderThickness="0">
+							<TextBox.ToolTip>
+								<TextBlock>
 								<Run Text="PID = "/>
 								<Run Text="{Binding ProductID}"/>
-							</TextBlock>
-						</TextBox.ToolTip>
-					</TextBox>
+								</TextBlock>
+							</TextBox.ToolTip>
+						</TextBox>
+					</Border>
+					
 				</GroupBox>
 
-				<GroupBox Grid.Column="1" Header="Serial Number" HorizontalAlignment="Stretch" Margin="2,0,0,0" Foreground="Pink">
-					<TextBox x:Name="MonitorSerialNumber" Margin="0,2,0,0" TextAlignment="Center" Text="{Binding SerialNumber}"/>
+				<GroupBox Grid.Column="1" HorizontalAlignment="Stretch" Margin="1,0,0,0">
+
+					<GroupBox.Header>
+						<TextBlock Text="SERIAL NUMBER" HorizontalAlignment="Center"/>
+					</GroupBox.Header>
+
+					<Border BorderBrush="{StaticResource SerialNumberColor}" BorderThickness="{StaticResource BorderThickness}">
+						<TextBox x:Name="MonitorSerialNumber" Margin="0,0,0,0" TextAlignment="Center" Padding="0,0,0,0" FontSize="20" Text="{Binding SerialNumber}" IsReadOnly="True" BorderThickness="0"/>
+					</Border>
+
 				</GroupBox>
 
 			</Grid>

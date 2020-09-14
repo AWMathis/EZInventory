@@ -1,7 +1,7 @@
 ﻿EZInventory
 
 
-exe
+winexe
 C#
 .cs
 D:\Projects\WPF\EZInventory\EZInventory\obj\Debug\
@@ -10,11 +10,11 @@ none
 false
 DEBUG;TRACE
 D:\Projects\WPF\EZInventory\EZInventory\App.xaml
-4-1355250194
-
-11-1497500107
-1221740512741
-Info_Window.xaml;MainWindow.xaml;UserControls\DeviceInfoUserControl.xaml;UserControls\MonitorInfoUserControl.xaml;
+7-967801482
+11495259755
+12-340134036
+130-1281944975
+Windows\About_Window.xaml;Windows\Info_Window.xaml;Windows\MainWindow.xaml;Resources\Icons.xaml;Resources\IconsNonShared.xaml;UserControls\DeviceInfoUserControl.xaml;UserControls\MonitorInfoUserControl.xaml;
 
 False
 

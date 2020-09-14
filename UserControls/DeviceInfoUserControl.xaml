@@ -8,58 +8,122 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
 
+	<UserControl.Resources>
+		<SolidColorBrush x:Key="ModelColor" Color="Cyan"/>
+		<SolidColorBrush x:Key="SerialNumberColor" Color="LightGreen"/>
+		<SolidColorBrush x:Key="ManufacturerColor" Color="Violet"/>
+		<SolidColorBrush x:Key="DriverColor" Color="Yellow"/>
+		<Thickness x:Key="BorderThickness">3</Thickness>
+	</UserControl.Resources>
 
 	<Grid>
-		<GroupBox Header="{Binding Title}"  Margin="0,0,0,0" Foreground="Green" BorderBrush="Red">
+		<GroupBox Header="{Binding Title}"  Margin="0,0,0,0">
 
 			<Grid>
-				<Grid.ColumnDefinitions>
-					<ColumnDefinition Width="Auto"/>
-					<ColumnDefinition Width="*"/>
-					<ColumnDefinition Width="*"/>
-				</Grid.ColumnDefinitions>
 				<Grid.RowDefinitions>
 					<RowDefinition Height="*"/>
 					<RowDefinition Height="*"/>
 				</Grid.RowDefinitions>
 
-				<GroupBox Grid.Row="0" Grid.Column="1" Header="Model" HorizontalAlignment="Stretch" Margin="0,0,0,0" Foreground="Yellow">
-					<TextBox x:Name="DeviceModel" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding Model}">
-						<TextBox.ToolTip>
-							<TextBlock>
-								<Run Text="PID = "/>
-								<Run Text="{Binding ProductID}"/>
-							</TextBlock>
-						</TextBox.ToolTip>
-					</TextBox>
-				</GroupBox>
+				<Grid Grid.Row="0" Margin="0,0,0,1">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="*"/>
+					</Grid.ColumnDefinitions>
 
-				<GroupBox Grid.Row="0" Grid.Column="2" Header="Serial Number" HorizontalAlignment="Stretch" Margin="2,0,0,0" Foreground="Pink">
-					<TextBox x:Name="DeviceSerialNumber" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding SerialNumber}"/>
-				</GroupBox>
+					<GroupBox Grid.Row="0" Grid.Column="0" Grid.RowSpan="1" HorizontalAlignment="Left" Margin="0,0,0,0">
 
-				<GroupBox Grid.Row="1" Grid.Column="1" Header="Manufacturer" HorizontalAlignment="Stretch" Margin="0,0,0,0" Foreground="Yellow">
-					<TextBox x:Name="DeviceManufacturer" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding Manufacturer}">
-						<TextBox.ToolTip>
-							<TextBlock>
-								<Run Text="VID = "/>
-								<Run Text="{Binding VendorID}"/>
-							</TextBlock>
-						</TextBox.ToolTip>
-					</TextBox>
-	
+						<GroupBox.Header>
+							<TextBlock Text="CONNECTED" HorizontalAlignment="Center"/>
+						</GroupBox.Header>
 
-				</GroupBox>
+						<TextBox x:Name="DeviceConnected" Margin="0,0,0,0" TextAlignment="Center" VerticalContentAlignment="Center" Text="{Binding Connected}"/>
+					</GroupBox>
 
-				<GroupBox Grid.Row="1" Grid.Column="2" Header="Driver/Device Name(s)" HorizontalAlignment="Stretch" Margin="2,0,0,0" Foreground="Pink">
-					<TextBox x:Name="DeviceDriverName" Margin="0,0,0,0" TextAlignment="Center" Text="{Binding DriverName}"/>
-				</GroupBox>
+					<GroupBox Grid.Row="0" Grid.Column="1" HorizontalAlignment="Stretch" Margin="1,0,0,0">
 
-				<GroupBox Grid.Row="0" Grid.Column="0" Grid.RowSpan="2" Header="Connected" HorizontalAlignment="Stretch" Margin="2,0,0,0" Foreground="Pink">
-					<TextBox x:Name="DeviceConnected" Margin="0,0,0,0" TextAlignment="Center" VerticalContentAlignment="Center" Text="{Binding Connected}"/>
-				</GroupBox>
+						<GroupBox.Header>
+							<TextBlock Text="MODEL" HorizontalAlignment="Center"/>
+						</GroupBox.Header>
+
+						<Border BorderBrush="{StaticResource ModelColor}" BorderThickness="{StaticResource BorderThickness}">
+							<Viewbox StretchDirection="DownOnly" Stretch="Uniform">
+								<TextBox x:Name="DeviceModel" Margin="0,0,0,0" FontSize="20" TextAlignment="Center" Text="{Binding Model}" BorderThickness="0" >
+									<TextBox.ToolTip>
+										<TextBlock>
+											<Run Text="PID = "/>
+											<Run Text="{Binding ProductID}"/>
+										</TextBlock>
+									</TextBox.ToolTip>
+								</TextBox>
+
+							</Viewbox>
+						</Border>
+						
+					</GroupBox>
+
+					<GroupBox Grid.Row="0" Grid.Column="2" HorizontalAlignment="Stretch" Margin="1,0,0,0">
+
+						<GroupBox.Header>
+							<TextBlock Text="SERIAL NUMBER" HorizontalAlignment="Center"/>
+						</GroupBox.Header>
+
+						<Border BorderBrush="{StaticResource SerialNumberColor}" BorderThickness="{StaticResource BorderThickness}">
+							<Viewbox StretchDirection="DownOnly" Stretch="Uniform">
+								<TextBox x:Name="DeviceSerialNumber" Margin="0,0,0,0" FontSize="20" TextAlignment="Center" Text="{Binding SerialNumber}" BorderThickness="0"/>
+							</Viewbox>
+						</Border>
+
+					</GroupBox>
+
+				</Grid>
+
+				<Grid Grid.Row="1" Margin="0,0,0,0">
+					<Grid.ColumnDefinitions>
+						<ColumnDefinition Width="Auto"/>
+						<ColumnDefinition Width="*"/>
+						<ColumnDefinition Width="*"/>
+					</Grid.ColumnDefinitions>
+
+					<GroupBox Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Margin="0,0,0,0" Background="{StaticResource ManufacturerColor}" Padding="0,0,0,0">
+
+						<GroupBox.Header>
+							<TextBlock Text="MANUFACTURER" HorizontalAlignment="Center"/>
+						</GroupBox.Header>
+
+						<Border BorderBrush="{StaticResource ManufacturerColor}" BorderThickness="{StaticResource BorderThickness}">
+							<Viewbox StretchDirection="DownOnly" Stretch="Uniform">
+								<TextBox x:Name="DeviceManufacturer" Margin="0,0,0,0" FontSize="20" TextAlignment="Center" Text="{Binding Manufacturer}" BorderThickness="0">
+									<TextBox.ToolTip>
+										<TextBlock>
+											<Run Text="VID = "/>
+											<Run Text="{Binding VendorID}"/>
+										</TextBlock>
+									</TextBox.ToolTip>
+								</TextBox>
+							</Viewbox>
+						</Border>
+					</GroupBox>
+
+					<GroupBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Margin="1,0,0,0"  Padding="0,0,0,0">
+
+						<GroupBox.Header>
+							<TextBlock Text="DRIVER/DEVICE NAME(S)" HorizontalAlignment="Center"/>
+						</GroupBox.Header>
+
+						<Border BorderBrush="{StaticResource DriverColor}" BorderThickness="{StaticResource BorderThickness}">
+							<Viewbox StretchDirection="DownOnly" Stretch="Uniform">
+							<TextBox x:Name="DeviceDriverName" Margin="0,0,0,0" FontSize="20" TextAlignment="Center" Text="{Binding DriverName}" BorderThickness="0"/>
+							</Viewbox>
+						</Border>
+
+					</GroupBox>
+
+				</Grid>
 
 			</Grid>
+			
 
 		</GroupBox>
 

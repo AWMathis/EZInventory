@@ -1,7 +1,8 @@
 ﻿
 FD:\Projects\WPF\EZInventory\EZInventory\App.xaml;;
-FD:\Projects\WPF\EZInventory\EZInventory\Info_Window.xaml;;
-FD:\Projects\WPF\EZInventory\EZInventory\MainWindow.xaml;;
+FD:\Projects\WPF\EZInventory\EZInventory\Windows\About_Window.xaml;;
+FD:\Projects\WPF\EZInventory\EZInventory\Windows\Info_Window.xaml;;
+FD:\Projects\WPF\EZInventory\EZInventory\Windows\MainWindow.xaml;;
 FD:\Projects\WPF\EZInventory\EZInventory\UserControls\DeviceInfoUserControl.xaml;;
 FD:\Projects\WPF\EZInventory\EZInventory\UserControls\MonitorInfoUserControl.xaml;;
 

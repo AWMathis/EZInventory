@@ -1,17 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using ControlzEx.Theming;
+using System;
 using System.Windows;
+
 
 namespace EZInventory {
 	/// <summary>
 	/// Interaction logic for App.xaml
 	/// </summary>
 	public partial class App : Application {
+
+		[System.Runtime.InteropServices.DllImport("Kernel32.dll")]
+		public static extern bool AttachConsole(int processId);
+
 		private void Application_Startup(object sender, StartupEventArgs e) {
+
+
+			AttachConsole(-1); //Attach a console so console output works.
 
 			string[] args = e.Args;
 			InputArgs inputArgs = new InputArgs();
@@ -30,7 +34,23 @@ namespace EZInventory {
 					case "/h":
 					case "/help":
 						//Show help dialog //need to implement
-						break;
+						string nl = System.Environment.NewLine + "\t";
+						string tb = "\t";
+						string helpMsg = "Available commands:" + nl;
+						helpMsg += tb + "/InputDB <DB Path> - Path to a usb.ids file. If missing the program will check the same directory as this exe first, then fallback to using an embedded version from when this was built." + nl;
+						helpMsg += tb + "/Computer <Computer Name> - Name of a computer to search, autofills when running in GUI, required to search when using command line" + nl;
+						helpMsg += tb + "/IP <IP Address> - IP address of a computer to search, autofills when running in GUI" + nl;
+						helpMsg += tb + "/Output <Output Path> - The the full path (including filename) to the output CSV file. If this is omited no CSV file will be generated" + nl;
+						helpMsg += tb + "/ShowDisconnected - Include disconnected devices in the search" + nl;
+						helpMsg += tb + "/DecryptSerials - Automatically detect and decode serials encoded in hexidecimal. Usually this should be enabled" + nl;
+						helpMsg += tb + "/RequireSerial - Only include devices with a valid serial number. If not included the software still only includes those with matching VID/PIDs from the usb.ids file" + nl;
+						helpMsg += tb + "/ExcludeMassStorage - Exclude any \"USB Mass Storage\" devices" + nl;
+						helpMsg += tb + "/NoGUI - Run the app in a console window only, command line arguments are the only way to adjust settings." + nl;
+						Console.WriteLine(helpMsg);
+						System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
+						this.Shutdown();
+						return;
+
 
 					case "-inputdb":
 					case "/inputdb":
@@ -42,9 +62,7 @@ namespace EZInventory {
 						break;
 
 					case "-computer":
-					case "-c":
 					case "/computer":
-					case "/c":
 						//Computer name
 						if (i + 1 < args.Length) {
 							i++;
@@ -60,9 +78,7 @@ namespace EZInventory {
 						}
 						break;
 
-					case "-o":
 					case "-output":
-					case "/o":
 					case "/output":
 						if (i + 1 < args.Length) {
 							i++;
@@ -85,28 +101,45 @@ namespace EZInventory {
 						inputArgs.noGUI = true;
 						break;
 
+					case "-requireserial":
+					case "/requireserial":
+						inputArgs.requireSerial = true;
+						break;
+
+					case "-excludemassstorage":
+					case "/excludemassstorage":
+						inputArgs.excludeUSBMassStorage = true;
+						break;
+
+					
 					default:
 						Console.WriteLine("Error! Unknown arguments at position " + i + ". Use /? or /help to get information about available commands. Aborting...");
+						System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
+						this.Shutdown();
 						return;
-						break;
 				}
 			}
 
-			
+
 
 			if (e.Args.Length >= 1) {
 				Info_Window window = new Info_Window(inputArgs);
-				//MessageBox.Show("Yay! The name of the window is now " + e.Args[0]);
-				//window.Title = e.Args[0];
-				//window.Show();
-				
-				window.Show();
+				window.Title = "EZ Inventory";
+
+
+				if (inputArgs.noGUI) {
+					System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
+					this.Shutdown();
+				}
+				else {
+					window.Show();
+				}
 
 				
 			}
 			else {
 				Info_Window window = new Info_Window();
-				window.Title = "No Args :(";
+				window.Title = "EZ Inventory";
 				window.Show();
 			}
 

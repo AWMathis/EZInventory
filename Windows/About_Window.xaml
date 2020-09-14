@@ -1,0 +1,34 @@
+﻿<mah:MetroWindow x:Class="EZInventory.Windows.About_Window"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:EZInventory.Windows"
+        xmlns:mah="clr-namespace:MahApps.Metro.Controls;assembly=MahApps.Metro"
+        mc:Ignorable="d"
+        Title="About_Window" Height="200" Width="200">
+	    
+    <Grid>
+
+		<Grid.RowDefinitions>
+			<RowDefinition Height="auto" />
+			<RowDefinition Height="*" />
+		</Grid.RowDefinitions>
+
+		<Border Grid.Row="0" BorderBrush="Violet" BorderThickness="2">
+			<StackPanel>
+				<TextBlock Text="Author: Alex Mathis" TextWrapping="Wrap"/>
+				<TextBlock Text="Email: github@awmathis.com" TextWrapping="Wrap"/>
+				<TextBlock Text="Version: 1.0" TextWrapping="Wrap"/>
+			</StackPanel>
+		</Border>
+
+		<Border Grid.Row="1" BorderBrush="LightGreen" BorderThickness="2">
+			<StackPanel>
+				<TextBlock Text="This program is created and released completely for free so feel free to distribute it!&#x0d;&#x0a;Go ahead and drop me a line at my email if you have any suggestions, complaints, and/or job offers." TextWrapping="Wrap"/>
+			</StackPanel>
+		</Border>
+
+
+	</Grid>
+</mah:MetroWindow>
