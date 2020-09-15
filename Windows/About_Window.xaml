@@ -5,9 +5,9 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EZInventory.Windows"
         mc:Ignorable="d"
-        Title="About_Window" Height="200" Width="200">
+        Title="About_Window" Height="300" Width="450">
 
-	<Grid>
+	<Grid Background="LightGray">
 
 		<Grid.RowDefinitions>
 			<RowDefinition Height="auto" />
@@ -15,16 +15,31 @@
 		</Grid.RowDefinitions>
 
 		<Border Grid.Row="0" BorderBrush="Violet" BorderThickness="2">
-			<StackPanel>
-				<TextBlock Text="Author: Alex Mathis" TextWrapping="Wrap"/>
-				<TextBlock Text="Email: github@awmathis.com" TextWrapping="Wrap"/>
-				<TextBlock Text="Version: 1.0" TextWrapping="Wrap"/>
-			</StackPanel>
+			<Grid >
+
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition Width="*"/>
+					<ColumnDefinition Width="*"/>
+				</Grid.ColumnDefinitions>
+
+				<Grid.RowDefinitions>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+					<RowDefinition Height="*"/>
+				</Grid.RowDefinitions>
+				
+				<TextBlock Grid.Row="0" Grid.Column="0" Text="Author: Alex Mathis" FontSize="20" TextWrapping="Wrap"/>
+				<TextBox Grid.Row="1" Grid.Column="0" Text="Email: github@awmathis.com" FontSize="20" TextWrapping="Wrap" IsReadOnly="True" Background="Transparent"/>
+				<TextBlock Grid.Row="2" Grid.Column="0" Text="Version: 1.0" FontSize="20" TextWrapping="Wrap"/>
+
+				<TextBlock Grid.Row="0" Grid.Column="1" Text="Download Page:" FontSize="20" TextWrapping="Wrap"/>
+				<TextBox Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Text="https://github.com/AlexM327/EZInventory" FontSize="20" TextWrapping="Wrap" IsReadOnly="True" Background="Transparent"/>
+			</Grid>
 		</Border>
 
 		<Border Grid.Row="1" BorderBrush="LightGreen" BorderThickness="2">
 			<StackPanel>
-				<TextBlock Text="This program is created and released completely for free so feel free to distribute it!&#x0d;&#x0a;Go ahead and drop me a line at my email if you have any suggestions, complaints, and/or job offers." TextWrapping="Wrap"/>
+				<TextBlock FontSize="20" Text="This program is created and released completely for free so feel free to distribute it!&#x0d;&#x0a;Go ahead and drop me a line at my email if you have any suggestions, complaints, and/or job offers." TextWrapping="Wrap"/>
 			</StackPanel>
 		</Border>
 
