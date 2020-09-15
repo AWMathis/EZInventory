@@ -9,6 +9,7 @@
              d:DesignHeight="300" d:DesignWidth="300">
 
 	<UserControl.Resources>
+		<SolidColorBrush x:Key="MonitorInfoHeaderColor" Color="PaleTurquoise"/>
 		<SolidColorBrush x:Key="ModelColor" Color="Cyan"/>
 		<SolidColorBrush x:Key="SerialNumberColor" Color="LightGreen"/>
 		<Thickness x:Key="BorderThickness">3</Thickness>
@@ -18,7 +19,7 @@
 		<GroupBox Margin="0,0,0,1">
 
 			<GroupBox.Header>
-				<TextBlock Text="{Binding Title}"/>
+				<TextBlock Text="{Binding Title}" Foreground="{StaticResource MonitorInfoHeaderColor}"/>
 			</GroupBox.Header>
 
 			<Grid>
@@ -30,10 +31,10 @@
 					<RowDefinition Height="*"/>
 				</Grid.RowDefinitions>
 
-				<GroupBox Grid.Column="0" HorizontalAlignment="Stretch" Margin="0,0,0,0">
+				<GroupBox Grid.Column="0" HorizontalAlignment="Stretch" Margin="0,0,0,0" BorderThickness="0">
 
 					<GroupBox.Header>
-						<TextBlock Text="MODEL" HorizontalAlignment="Center"/>
+						<TextBlock Text="MODEL" HorizontalAlignment="Center" Foreground="{StaticResource ModelColor}"/>
 					</GroupBox.Header>
 
 					<Border BorderBrush="{StaticResource ModelColor}" BorderThickness="{StaticResource BorderThickness}">
@@ -49,10 +50,10 @@
 					
 				</GroupBox>
 
-				<GroupBox Grid.Column="1" HorizontalAlignment="Stretch" Margin="1,0,0,0">
+				<GroupBox Grid.Column="1" HorizontalAlignment="Stretch" Margin="1,0,0,0" BorderThickness="0">
 
 					<GroupBox.Header>
-						<TextBlock Text="SERIAL NUMBER" HorizontalAlignment="Center"/>
+						<TextBlock Text="SERIAL NUMBER" HorizontalAlignment="Center" Foreground="{StaticResource SerialNumberColor}"/>
 					</GroupBox.Header>
 
 					<Border BorderBrush="{StaticResource SerialNumberColor}" BorderThickness="{StaticResource BorderThickness}">

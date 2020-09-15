@@ -7,8 +7,6 @@ using System.Net.NetworkInformation;
 using System.ComponentModel;
 using EZInventory.InfoClasses;
 using EZInventory.CSVWriter;
-using MahApps.Metro.Controls;
-using ControlzEx.Theming;
 using EZInventory.Windows;
 
 /*
@@ -40,7 +38,7 @@ namespace EZInventory {
 		public bool noGUI;
 	}
 
-	public partial class Info_Window : MetroWindow {
+	public partial class Info_Window : Window {
 
 		private InfoGetter infoGetter = new InfoGetter();
 		private CSVWriterClass writer = new CSVWriterClass();
@@ -53,9 +51,6 @@ namespace EZInventory {
 
 		public Info_Window() {
 
-			//Sync the theme with the windows settings. e.g. Dark mode with green accents
-			ThemeManager.Current.SyncThemeBaseColorWithWindowsAppModeSetting();
-			ThemeManager.Current.SyncThemeColorSchemeWithWindowsAccentColor();
 
 			InitializeComponent();
 			infoGetter.ParseUSBIDs();
@@ -64,10 +59,6 @@ namespace EZInventory {
 			ComputerName.Focus();
 		}
 		public Info_Window(InputArgs args) {
-
-			//Sync the theme with the windows settings. e.g. Dark mode with green accents
-			ThemeManager.Current.SyncThemeBaseColorWithWindowsAppModeSetting();
-			ThemeManager.Current.SyncThemeColorSchemeWithWindowsAccentColor();
 
 			infoGetter.USBIDSPath = args.usbIDSPath;
 			infoGetter.ParseUSBIDs();
@@ -146,15 +137,7 @@ namespace EZInventory {
 		}
 
 		private void SwitchBaseThemeMenuItem_Click(object sender, RoutedEventArgs e) {
-			if (themeChanged) {
-				ThemeManager.Current.ChangeTheme(this, "Dark.Blue");
-				themeChanged = !themeChanged;
-			} 
-			else {
-				ThemeManager.Current.ChangeTheme(this, "Light.Red");
-				themeChanged = !themeChanged;
-			}
-			
+
 		}
 
 		private void AboutMenuItem_Click(object sender, RoutedEventArgs e) {

@@ -37,7 +37,7 @@ namespace EZInventory.UserControls {
 			Model = info.Model;
 			SerialNumber = info.SerialNumber;
 			DriverName = info.PNPEntityName != "" ? info.PNPEntityName : info.DriverName;
-			//Connected = info.Connected.ToString();
+			Connected = info.Connected.ToString();
 			ProductID = info.ProductID;
 			VendorID = info.VendorID;
 

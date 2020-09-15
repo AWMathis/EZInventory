@@ -11,13 +11,12 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Shapes;
-using MahApps.Metro.Controls;
 
 namespace EZInventory.Windows {
 	/// <summary>
 	/// Interaction logic for About_Window.xaml
 	/// </summary>
-	public partial class About_Window : MetroWindow {
+	public partial class About_Window : Window {
 		public About_Window() {
 			InitializeComponent();
 		}

@@ -1,5 +1,4 @@
-﻿using ControlzEx.Theming;
-using System;
+﻿using System;
 using System.Windows;
 
 
@@ -13,7 +12,6 @@ namespace EZInventory {
 		public static extern bool AttachConsole(int processId);
 
 		private void Application_Startup(object sender, StartupEventArgs e) {
-
 
 			AttachConsole(-1); //Attach a console so console output works.
 
@@ -124,8 +122,9 @@ namespace EZInventory {
 
 			if (e.Args.Length >= 1) {
 				Info_Window window = new Info_Window(inputArgs);
-				window.Title = "EZ Inventory";
-
+				//MessageBox.Show("Yay! The name of the window is now " + e.Args[0]);
+				//window.Title = e.Args[0];
+				//window.Show();
 
 				if (inputArgs.noGUI) {
 					System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
@@ -139,7 +138,7 @@ namespace EZInventory {
 			}
 			else {
 				Info_Window window = new Info_Window();
-				window.Title = "EZ Inventory";
+				window.Title = "No Args :(";
 				window.Show();
 			}
 

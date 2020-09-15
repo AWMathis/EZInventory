@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-D:\Projects\WPF\EZInventory\EZInventory\obj\Debug\
+D:\Projects\WPF\EZInventory NO METRO\EzInventory\obj\Debug\
 EZInventory
 none
 false
 DEBUG;TRACE
-D:\Projects\WPF\EZInventory\EZInventory\App.xaml
-7-967801482
+D:\Projects\WPF\EZInventory NO METRO\EzInventory\App.xaml
+51444608326
 11495259755
 13-1182493403
-130-1281944975
-Windows\About_Window.xaml;Windows\Info_Window.xaml;Windows\MainWindow.xaml;Resources\Icons.xaml;Resources\IconsNonShared.xaml;UserControls\DeviceInfoUserControl.xaml;UserControls\MonitorInfoUserControl.xaml;
+1231810030345
+Windows\About_Window.xaml;Windows\Info_Window.xaml;Windows\MainWindow.xaml;UserControls\DeviceInfoUserControl.xaml;UserControls\MonitorInfoUserControl.xaml;
 
-False
+True
 
