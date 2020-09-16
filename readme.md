@@ -4,8 +4,8 @@
 
 This program uses WMI/CIM to query remote computers and view hardware information including monitors and known devices.
 
-![Before Searching](/MiscFiles/BeforeSearch.PNG) 
-![After Searching](/MiscFiles/AfterSearch.PNG) ![Options Menu](/MiscFiles/AfterSearchMenu.PNG)
+![Before Searching and Menu](/MiscFiles/BeforeSearch.PNG) 
+![After Searching](/MiscFiles/AfterSearch.PNG)
 
 ## About
 
