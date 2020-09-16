@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:EZInventory.Windows"
         mc:Ignorable="d"
-        Title="About_Window" Height="300" Width="450">
+        Title="About_Window" Height="500" Width="700">
 
 	<Grid Background="LightGray">
 
@@ -14,7 +14,12 @@
 			<RowDefinition Height="*" />
 		</Grid.RowDefinitions>
 
-		<Border Grid.Row="0" BorderBrush="Violet" BorderThickness="2">
+		<Grid.ColumnDefinitions>
+			<ColumnDefinition Width="*"/>
+			<ColumnDefinition Width="*"/>
+		</Grid.ColumnDefinitions>
+
+		<Border Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2" BorderBrush="Violet" BorderThickness="2">
 			<Grid >
 
 				<Grid.ColumnDefinitions>
@@ -37,7 +42,13 @@
 			</Grid>
 		</Border>
 
-		<Border Grid.Row="1" BorderBrush="LightGreen" BorderThickness="2">
+		<Border Grid.Row="1" Grid.Column="0" BorderBrush="Yellow" BorderThickness="2">
+			<StackPanel>
+				<TextBlock FontSize="20" Text="Tips: You can either place a usb.ids file (obtained from http://www.linux-usb.org/usb-ids.html) in the same directory as this exe, or you can specify one with command line arguments if you want a more updated version thatn what I've included" TextWrapping="Wrap"/>
+			</StackPanel>
+		</Border>
+		
+		<Border Grid.Row="1" Grid.Column="1" BorderBrush="LightGreen" BorderThickness="2">
 			<StackPanel>
 				<TextBlock FontSize="20" Text="This program is created and released completely for free so feel free to distribute it!&#x0d;&#x0a;Go ahead and drop me a line at my email if you have any suggestions, complaints, and/or job offers." TextWrapping="Wrap"/>
 			</StackPanel>

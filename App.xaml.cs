@@ -11,6 +11,8 @@ namespace EZInventory {
 		[System.Runtime.InteropServices.DllImport("Kernel32.dll")]
 		public static extern bool AttachConsole(int processId);
 
+		private string windowName = "EZ Inventory";
+
 		private void Application_Startup(object sender, StartupEventArgs e) {
 
 			AttachConsole(-1); //Attach a console so console output works.
@@ -122,9 +124,7 @@ namespace EZInventory {
 
 			if (e.Args.Length >= 1) {
 				Info_Window window = new Info_Window(inputArgs);
-				//MessageBox.Show("Yay! The name of the window is now " + e.Args[0]);
-				//window.Title = e.Args[0];
-				//window.Show();
+				window.Title = windowName;
 
 				if (inputArgs.noGUI) {
 					System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
@@ -138,7 +138,7 @@ namespace EZInventory {
 			}
 			else {
 				Info_Window window = new Info_Window();
-				window.Title = "No Args :(";
+				window.Title = windowName;
 				window.Show();
 			}
 
