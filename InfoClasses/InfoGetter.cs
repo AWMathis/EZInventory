@@ -5,7 +5,8 @@ using System.Management;
 using System.Net;
 using Microsoft.Win32;
 using System.IO;
-
+using Microsoft.Extensions.FileProviders;
+using System.Reflection;
 
 namespace EZInventory.InfoClasses {
 
@@ -276,7 +277,18 @@ namespace EZInventory.InfoClasses {
 				usbIDS = System.IO.File.ReadAllText("usb.ids");
 			}
 			else {
-				usbIDS = System.Text.Encoding.Default.GetString(Properties.Resources.usb);
+				//usbIDS = System.Text.Encoding.Default.GetString("MiscFiles\\usb.ids");
+
+				//using Stream stream = this.GetType().Assembly.GetManifestResourceStream("usb.ids");
+				//using StreamReader sr = new StreamReader(stream);
+				//usbIDS = sr.ReadToEnd();
+
+				var embeddedProvider = new EmbeddedFileProvider(Assembly.GetEntryAssembly());
+				var fileInfo = embeddedProvider.GetFileInfo("MiscFiles\\usb.ids");
+				using (var reader = new StreamReader(fileInfo.CreateReadStream())) {
+					usbIDS = reader.ReadToEnd();
+				}
+
 			}
 
 			string[] usbIDSArray = usbIDS.Split('\n');

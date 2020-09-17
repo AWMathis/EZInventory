@@ -49,7 +49,7 @@ namespace EZInventory {
 						helpMsg += tb + "/NoGUI - Run the app in a console window only, command line arguments are the only way to adjust settings." + nl;
 
 						Console.WriteLine(helpMsg);
-						System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
+						//System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
 						this.Shutdown();
 						return;
 
@@ -124,8 +124,8 @@ namespace EZInventory {
 
 					
 					default:
-						Console.WriteLine("Error! Unknown arguments at position " + i + ". Use /? or /help to get information about available commands. Aborting...");
-						System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
+						Console.WriteLine("Error! Unknown arguments at position " + i + ": " + args[i] + ". Use /? or /help to get information about available commands. Aborting...");
+						//System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
 						this.Shutdown();
 						return;
 				}
@@ -138,10 +138,11 @@ namespace EZInventory {
 				window.Title = windowName;
 
 				if (inputArgs.noGUI) {
-					System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
+					//System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
 					this.Shutdown();
 				}
 				else {
+					Console.WriteLine("No Arguments!");
 					window.Show();
 				}
 

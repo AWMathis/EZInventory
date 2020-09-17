@@ -7,7 +7,6 @@
 		xmlns:sys="clr-namespace:System;assembly=mscorlib"
 		xmlns:uc="clr-namespace:EZInventory.UserControls"
         mc:Ignorable="d"
-		Icon="..\MiscFiles\icon.png"
         Title="Info_Window" Height="450" Width="500">
 
 	<Window.Resources>
