@@ -35,7 +35,7 @@
 				
 				<TextBlock Grid.Row="0" Grid.Column="0" Text="Author: Alex Mathis" FontSize="20" TextWrapping="Wrap"/>
 				<TextBox Grid.Row="1" Grid.Column="0" Text="Email: github@awmathis.com" FontSize="20" TextWrapping="Wrap" IsReadOnly="True" Background="Transparent"/>
-				<TextBlock Grid.Row="2" Grid.Column="0" Text="Version: 1.0" FontSize="20" TextWrapping="Wrap"/>
+				<TextBlock Grid.Row="2" Grid.Column="0" Text="Version: 1.1" FontSize="20" TextWrapping="Wrap"/>
 
 				<TextBlock Grid.Row="0" Grid.Column="1" Text="Download Page:" FontSize="20" TextWrapping="Wrap"/>
 				<TextBox Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Text="https://github.com/AlexM327/EZInventory" FontSize="20" TextWrapping="Wrap" IsReadOnly="True" Background="Transparent"/>
