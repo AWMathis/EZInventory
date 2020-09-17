@@ -8,9 +8,12 @@ using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.Win32;
 using EZInventory.InfoClasses;
+using System.Globalization;
 
 namespace EZInventory.CSVWriter {
 	class CSVWriterClass {
+
+		private bool multipleComputers;
 
 		public List<CSVInfo> IngestData(ComputerInfo computer, List<MonitorInfo> monitors, List<DeviceInfo> devices) {
 
@@ -36,14 +39,27 @@ namespace EZInventory.CSVWriter {
 			return CSVInfos;
 		}
 
+		public int WriteCSV(ComputerInfo computer, List<MonitorInfo> monitors, List<DeviceInfo> devices, string outputPath, bool multipleComputers) {
+
+			this.multipleComputers = multipleComputers;
+
+			return WriteCSV(computer, monitors, devices, outputPath);
+		}
+
 		public int WriteCSV(ComputerInfo computer, List<MonitorInfo> monitors, List<DeviceInfo> devices, string outputPath) {
 
 			List<CSVInfo> CSVInfos = IngestData(computer, monitors, devices);
 
 			if (outputPath != null) {
+
+				//Skip header line if the file already exists
+				CsvConfiguration csvConfig = new CsvConfiguration(CultureInfo.CurrentCulture) {
+					HasHeaderRecord = !File.Exists(outputPath)
+				};
+
 				Console.WriteLine("Exporting data to file  " + outputPath);
-				using (var writer = new StreamWriter(outputPath))
-				using (var csv = new CsvWriter(writer, System.Globalization.CultureInfo.InvariantCulture)) {
+				using (var writer = new StreamWriter(outputPath, append: true))
+				using (var csv = new CsvWriter(writer, csvConfig)) {
 					csv.Configuration.RegisterClassMap<CSVInfo.CSVInfoMap>();
 					csv.WriteRecords(CSVInfos);
 					csv.Flush();
@@ -121,5 +137,6 @@ namespace EZInventory.CSVWriter {
 				Map(m => m.VID).Index(9).Name("Vendor ID (VID)");
 			}
 		}
+
 	}
 }

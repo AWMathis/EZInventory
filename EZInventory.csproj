@@ -84,6 +84,9 @@
   <PropertyGroup>
     <StartupObject />
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="CsvHelper, Version=15.0.0.0, Culture=neutral, PublicKeyToken=8c4959082be5c823, processorArchitecture=MSIL">
       <HintPath>packages\CsvHelper.15.0.5\lib\net47\CsvHelper.dll</HintPath>
@@ -196,6 +199,7 @@
     <Resource Include="MiscFiles\Icon Source.txt" />
     <Resource Include="MiscFiles\icon.ico" />
     <Resource Include="MiscFiles\icon.png" />
+    <Resource Include="icon.ico" />
     <Content Include="MiscFiles\icon.svg" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

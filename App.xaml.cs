@@ -40,12 +40,14 @@ namespace EZInventory {
 						helpMsg += tb + "/InputDB <DB Path> - Path to a usb.ids file. If missing the program will check the same directory as this exe first, then fallback to using an embedded version from when this was built." + nl;
 						helpMsg += tb + "/Computer <Computer Name> - Name of a computer to search, autofills when running in GUI, required to search when using command line" + nl;
 						helpMsg += tb + "/IP <IP Address> - IP address of a computer to search, autofills when running in GUI" + nl;
-						helpMsg += tb + "/Output <Output Path> - The the full path (including filename) to the output CSV file. If this is omited no CSV file will be generated" + nl;
+						helpMsg += tb + "/Output <Output Path.csv> - The the full path (including filename) to the output CSV file. If this is omited no CSV file will be generated" + nl;
+						helpMsg += tb + "/ComputerList <list.txt> - Provide a list of computers (in a text file) to search one at a time. Requires the use of /NoGUI" + nl;
 						helpMsg += tb + "/ShowDisconnected - Include disconnected devices in the search" + nl;
 						helpMsg += tb + "/DecryptSerials - Automatically detect and decode serials encoded in hexidecimal. Usually this should be enabled" + nl;
 						helpMsg += tb + "/RequireSerial - Only include devices with a valid serial number. If not included the software still only includes those with matching VID/PIDs from the usb.ids file" + nl;
 						helpMsg += tb + "/ExcludeMassStorage - Exclude any \"USB Mass Storage\" devices" + nl;
 						helpMsg += tb + "/NoGUI - Run the app in a console window only, command line arguments are the only way to adjust settings." + nl;
+
 						Console.WriteLine(helpMsg);
 						System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
 						this.Shutdown();
@@ -67,6 +69,15 @@ namespace EZInventory {
 						if (i + 1 < args.Length) {
 							i++;
 							inputArgs.computerName = args[i]; //need to test interactions with ip
+						}
+						break;
+
+					case "-computerlist":
+					case "/computerlist":
+						//Computer list
+						if (i + 1 < args.Length) {
+							i++;
+							inputArgs.inputListPath = args[i]; //need to test interactions with ip
 						}
 						break;
 

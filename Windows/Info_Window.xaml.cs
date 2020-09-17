@@ -8,6 +8,8 @@ using System.ComponentModel;
 using EZInventory.InfoClasses;
 using EZInventory.CSVWriter;
 using EZInventory.Windows;
+using System.Reflection.Emit;
+using System.IO;
 
 /*
 
@@ -36,6 +38,7 @@ namespace EZInventory {
 		public bool requireSerial;
 		public bool excludeUSBMassStorage;
 		public bool noGUI;
+		public string inputListPath;
 	}
 
 	public partial class Info_Window : Window {
@@ -46,8 +49,6 @@ namespace EZInventory {
 		private ComputerInfo computerInfo = new ComputerInfo();
 		private List<MonitorInfo> monitorInfoList = new List<MonitorInfo>();
 		private List<DeviceInfo> deviceInfoList = new List<DeviceInfo>();
-
-		bool themeChanged = false;
 
 		public Info_Window() {
 
@@ -85,38 +86,84 @@ namespace EZInventory {
 
 				Console.WriteLine("GUI is disabled, running in console only mode" + System.Environment.NewLine);
 
-				string computerName = args.computerName ?? System.Environment.MachineName;
-				Console.WriteLine("Searching info for computer \"" + computerName + "\"..." + System.Environment.NewLine + "-----------------------------------------------------------------------------------" + System.Environment.NewLine);
-				ComputerInfo computerInfo = infoGetter.GetComputerInfo(computerName);
-				Console.WriteLine("-----------------------------------Computer Info-----------------------------------");
-				Console.WriteLine(computerInfo.ToString());
+				string computerListPath = args.inputListPath;
+				if (computerListPath != null) {
+					if (File.Exists(computerListPath)) {
+						List<string> computers = new List<string>();
+						string currentLine;
+						// Read the file
+						System.IO.StreamReader file = new System.IO.StreamReader(computerListPath);
+						while ((currentLine = file.ReadLine()) != null) {
+							computers.Add(currentLine);
+						}
+						file.Close();
 
-				monitorInfoList = infoGetter.GetMonitorInfo(computerName);
-				monitorInfoList = infoGetter.FilterMonitorInfo(monitorInfoList, args.decryptSerials);
-				Console.WriteLine("-----------------------------------Monitor Info------------------------------------");
-				int monitorCount = 1;
-				foreach (MonitorInfo m in monitorInfoList) {
-					Console.WriteLine("---------------------------------Monitor " + monitorCount + "-----------------------------------");
-					Console.WriteLine(m.ToString());
-					monitorCount++;
-				}
 
-				deviceInfoList = infoGetter.GetDeviceInfoRegistry(computerName);
-				deviceInfoList = infoGetter.FilterDeviceInfo(deviceInfoList, args.decryptSerials, args.showDisconnected, args.requireSerial, args.excludeUSBMassStorage);
-				Console.WriteLine("-----------------------------------Device Info-------------------------------------");
-				int deviceCount = 1;
-				foreach (DeviceInfo d in deviceInfoList) {
-					Console.WriteLine("---------------------------------Device " + deviceCount + "------------------------------------");
-					Console.WriteLine(d.ToString());
-					deviceCount++;
-				}
+						foreach(string computer in computers) {
+							Console.WriteLine("Querying " + computer + "...");
+							No_GUI(args, computer);
+						}
 
-				if (args.outputPath != null) {
-					writer.WriteCSV(computerInfo, monitorInfoList, deviceInfoList, args.outputPath);
+					}
+					else {
+						Console.WriteLine("Error! A list of computer names was supplied but the file doesn't exist or couldn't be opened! Aborting...");
+						return;
+					}
+
+				} 
+				else {
+					No_GUI(args, null);
 				}
+				
 			}
 
 			Console.WriteLine();
+		}
+
+		private void No_GUI(InputArgs args, string computerNameOverride) {
+
+			string computerName = computerNameOverride ?? args.computerName ?? System.Environment.MachineName;
+
+			Ping ping = new Ping();
+			PingReply pingReply = null;
+
+			try {
+				pingReply = ping.Send(computerName);
+			}
+			catch (PingException pingException) {
+				Console.WriteLine("Error! Bad hostname: " + computerName +". Skipping...");
+				return;
+			}
+
+
+			Console.WriteLine("Searching info for computer \"" + computerName + "\"..." + System.Environment.NewLine + "-----------------------------------------------------------------------------------" + System.Environment.NewLine);
+			ComputerInfo computerInfo = infoGetter.GetComputerInfo(computerName);
+			Console.WriteLine("-----------------------------------Computer Info-----------------------------------");
+			Console.WriteLine(computerInfo.ToString());
+
+			monitorInfoList = infoGetter.GetMonitorInfo(computerName);
+			monitorInfoList = infoGetter.FilterMonitorInfo(monitorInfoList, args.decryptSerials);
+			Console.WriteLine("-----------------------------------Monitor Info------------------------------------");
+			int monitorCount = 1;
+			foreach (MonitorInfo m in monitorInfoList) {
+				Console.WriteLine("---------------------------------Monitor " + monitorCount + "-----------------------------------");
+				Console.WriteLine(m.ToString());
+				monitorCount++;
+			}
+
+			deviceInfoList = infoGetter.GetDeviceInfoRegistry(computerName);
+			deviceInfoList = infoGetter.FilterDeviceInfo(deviceInfoList, args.decryptSerials, args.showDisconnected, args.requireSerial, args.excludeUSBMassStorage);
+			Console.WriteLine("-----------------------------------Device Info-------------------------------------");
+			int deviceCount = 1;
+			foreach (DeviceInfo d in deviceInfoList) {
+				Console.WriteLine("---------------------------------Device " + deviceCount + "------------------------------------");
+				Console.WriteLine(d.ToString());
+				deviceCount++;
+			}
+
+			if (args.outputPath != null) {
+				writer.WriteCSV(computerInfo, monitorInfoList, deviceInfoList, args.outputPath, (args.inputListPath != null));
+			}
 		}
 
 		private void NewInstanceMenuItem_Click(object sender, RoutedEventArgs e) {
@@ -189,6 +236,7 @@ namespace EZInventory {
 			}
 			catch (PingException pingException) {
 				Console.WriteLine("Error! Bad hostname! Aborting...");
+				(sender as BackgroundWorker).ReportProgress(-1);
 				return;
 			}
 
@@ -204,6 +252,8 @@ namespace EZInventory {
 				List<DeviceInfo> deviceInfos = infoGetter.GetDeviceInfoRegistry(computer);
 
 				(sender as BackgroundWorker).ReportProgress(4, deviceInfos);
+
+				(sender as BackgroundWorker).ReportProgress(5, deviceInfos);
 			}
 		}
 
@@ -227,6 +277,12 @@ namespace EZInventory {
 					deviceInfoList = (List<DeviceInfo>)e.UserState;
 					DisplayDeviceInfo();
 					break;
+				case 5:
+					StatusBarText.Text = "Ready";
+					break;
+				case -1:
+					StatusBarText.Text = "Error: Unable to query info";
+					break;
 				default:
 					StatusBarText.Text = "Error: Unknown BackgroundWorker state";
 					break;
@@ -235,8 +291,7 @@ namespace EZInventory {
 
 		private void worker_Complete(object sender, RunWorkerCompletedEventArgs e) {
 
-			//Update UI based on result
-			StatusBarText.Text = "Ready";
+			
 		}
 
 		public ComputerInfo DisplayComputerInfo() {

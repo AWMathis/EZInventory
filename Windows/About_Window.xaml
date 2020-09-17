@@ -51,6 +51,8 @@
 		<Border Grid.Row="1" Grid.Column="1" BorderBrush="LightGreen" BorderThickness="2">
 			<StackPanel>
 				<TextBlock FontSize="20" Text="This program is created and released completely for free so feel free to distribute it!&#x0d;&#x0a;Go ahead and drop me a line at my email if you have any suggestions, complaints, and/or job offers." TextWrapping="Wrap"/>
+				<TextBlock><LineBreak/></TextBlock>
+				<TextBlock FontSize="20" Text="Icon source: https://icon-icons.com/icon/user-manual-info-information-help-support/57245" TextWrapping="Wrap"/>
 			</StackPanel>
 		</Border>
 
