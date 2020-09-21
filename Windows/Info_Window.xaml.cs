@@ -101,7 +101,15 @@ namespace EZInventory {
 
 						foreach(string computer in computers) {
 							Console.WriteLine("Querying " + computer + "...");
-							No_GUI(args, computer);
+							if ((computer != "") && (computer != null)) {
+								try {
+									No_GUI(args, computer);
+								} catch {
+									
+								}
+	
+							}
+
 						}
 
 					}
@@ -123,18 +131,30 @@ namespace EZInventory {
 		private void No_GUI(InputArgs args, string computerNameOverride) {
 
 			string computerName = computerNameOverride ?? args.computerName ?? System.Environment.MachineName;
+			computerName = computerName.Trim(' ');
 
 			Ping ping = new Ping();
 			PingReply pingReply = null;
 
 			try {
-				pingReply = ping.Send(computerName);
+				pingReply = ping.Send(computerName, 1000);
 			}
 			catch (PingException pingException) {
 				Console.WriteLine("Error! Bad hostname: " + computerName +". Skipping...");
+				ping.Dispose();
 				return;
 			}
 
+			if (pingReply.Status != IPStatus.Success) {
+				ping.Dispose();
+				return;
+			}
+			ping.Dispose();
+
+			if (!infoGetter.connectionTest(computerName)) {
+				Console.WriteLine("WMI/CIM query failed on " + computerName + ". Skipping...");
+				return;
+			}
 
 			Console.WriteLine("Searching info for computer \"" + computerName + "\"..." + System.Environment.NewLine + "-----------------------------------------------------------------------------------" + System.Environment.NewLine);
 			ComputerInfo computerInfo = infoGetter.GetComputerInfo(computerName);
@@ -149,6 +169,11 @@ namespace EZInventory {
 				Console.WriteLine("---------------------------------Monitor " + monitorCount + "-----------------------------------");
 				Console.WriteLine(m.ToString());
 				monitorCount++;
+			}
+			
+			if (!infoGetter.registryTest(computerName)) {
+				Console.WriteLine("Registry query failed on " + computerName + ". Skipping devices...");
+				return;
 			}
 
 			deviceInfoList = infoGetter.GetDeviceInfoRegistry(computerName);

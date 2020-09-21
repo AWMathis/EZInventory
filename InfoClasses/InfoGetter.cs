@@ -21,9 +21,37 @@ namespace EZInventory.InfoClasses {
 
 		}
 
+		public bool connectionTest (string computer) {
+			ManagementObjectCollection computerInfoCollection = CIMQuery(computer, "Win32_ComputerSystem");
+
+			if (computerInfoCollection != null) {
+				return true;
+			}
+
+			return false;
+		}
+
+		public bool registryTest (string computer) {
+			ManagementObjectCollection computerInfoCollection = CIMQuery(computer, "Win32_ComputerSystem");
+
+			try {
+				RegistryKey remoteReg = RegistryKey.OpenRemoteBaseKey(RegistryHive.LocalMachine, computer);
+				return true;
+			}
+			catch {
+				return false;
+			}
+			return false;
+		}
+
 		public ComputerInfo GetComputerInfo(string computer) {
 
 			ManagementObjectCollection computerInfoCollection = CIMQuery(computer, "Win32_ComputerSystem");
+
+			if (computerInfoCollection == null) {
+				return new ComputerInfo();
+			}
+
 			ManagementObject computerInfo = computerInfoCollection.OfType<ManagementObject>().First();
 
 			IPAddress[] addresses = Dns.GetHostAddresses(computer);
@@ -58,29 +86,46 @@ namespace EZInventory.InfoClasses {
 
 			ManagementObjectCollection monitors = WMIQuery(computer, "WMIMonitorID");
 
-			if (monitors != null) {
+			try {
+				int test = monitors.Count;
+			} 
+			catch {
+				return new List<MonitorInfo>();
+			}
+
+
+			if (monitors != null && monitors.Count >= 1) {
 
 				foreach (ManagementObject monitor in monitors) {
 
 					string monitorModel = "";
-					foreach (UInt16 i in (UInt16[])monitor["UserFriendlyName"]) {
-						monitorModel += (char)i;
-					}
+					try {
+						foreach (UInt16 i in (UInt16[])monitor["UserFriendlyName"]) {
+							monitorModel += (char)i;
+						}
+					} catch {}
+
 
 					string monitorSerial = "";
-					foreach (UInt16 i in (UInt16[])monitor["SerialNumberID"]) {
-						monitorSerial += (char)i;
-					}
+					try {
+						foreach (UInt16 i in (UInt16[])monitor["SerialNumberID"]) {
+							monitorSerial += (char)i;
+						}
+					} catch {}
 
 					string monitorPID = "";
-					foreach (UInt16 i in (UInt16[])monitor["ProductCodeID"]) {
-						monitorPID += (char)i;
-					}
+					try {
+						foreach (UInt16 i in (UInt16[])monitor["ProductCodeID"]) {
+							monitorPID += (char)i;
+						}
+					} catch {}					
 
 					string monitorManufacturer = "";
-					foreach (UInt16 i in (UInt16[])monitor["ManufacturerName"]) {
-						monitorManufacturer += (char)i;
-					}
+					try {
+						foreach (UInt16 i in (UInt16[])monitor["ManufacturerName"]) {
+							monitorManufacturer += (char)i;
+						}
+					} catch {}							
 
 					monitorInfos.Add(new MonitorInfo(monitorManufacturer, monitorModel, monitorSerial, monitorPID));
 
@@ -132,9 +177,20 @@ namespace EZInventory.InfoClasses {
 						deviceIDs.Add(keyName);
 						if (!subKeyName.Any(ch => !Char.IsLetterOrDigit(ch))) { serialNumbers.Add(subKeyName); } else { serialNumbers.Add(unknownValue);  } 
 						
-						manufacturers.Add(regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("Mfg").ToString().Split(';')[1]);
+						string mfg = "";
+						if (regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValueNames().Contains("Mfg")) {
+							mfg = regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("Mfg").ToString();
+						}
+						if (mfg.Split(';').Length > 1) {manufacturers.Add(mfg.Split(';')[1]);}
+						else {manufacturers.Add(mfg);}
 
-						driverNames.Add(regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("DeviceDesc").ToString().Split(';')[1]);
+						string deviceDesc = "";
+						if (regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValueNames().Contains("DeviceDesc")) {
+							deviceDesc = regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("DeviceDesc").ToString(); 
+						}
+						if (deviceDesc.Split(';').Length > 1) {driverNames.Add(deviceDesc.Split(';')[1]);}
+						else {driverNames.Add(deviceDesc);}
+
 
 						deviceIndex++;
 						break;
@@ -398,7 +454,14 @@ namespace EZInventory.InfoClasses {
 
 		private ManagementObjectCollection CIMQuery(string computer, string className) {
 			ManagementScope scope = new ManagementScope("\\\\" + computer + "\\root\\cimv2");
-			scope.Connect();
+			try {
+				scope.Connect();
+			} 
+			catch {
+				Console.WriteLine("Unable to connect to RPC server: " + computer);
+				return null;
+			}
+
 			ObjectQuery query = new ObjectQuery("SELECT * FROM " + className);
 			ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
 
@@ -412,7 +475,14 @@ namespace EZInventory.InfoClasses {
 		private ManagementObjectCollection WMIQuery(string computer, string className) {
 
 			ManagementScope scope = new ManagementScope("\\\\" + computer + "\\root\\wmi");
-			scope.Connect();
+			try {
+				scope.Connect();
+			} 
+			catch {
+				Console.WriteLine("Unable to connect to RPC server: " + computer);
+				return null;
+			}
+
 			ObjectQuery query = new ObjectQuery("SELECT * FROM " + className);
 			ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
 
