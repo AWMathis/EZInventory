@@ -187,7 +187,7 @@ namespace EZInventory {
 			}
 
 			if (args.outputPath != null) {
-				writer.WriteCSV(computerInfo, monitorInfoList, deviceInfoList, args.outputPath, (args.inputListPath != null));
+				writer.WriteCSV(computerInfo, monitorInfoList, deviceInfoList, args.outputPath);
 			}
 		}
 

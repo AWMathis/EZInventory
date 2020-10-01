@@ -13,8 +13,6 @@ using System.Globalization;
 namespace EZInventory.CSVWriter {
 	class CSVWriterClass {
 
-		private bool multipleComputers;
-
 		public List<CSVInfo> IngestData(ComputerInfo computer, List<MonitorInfo> monitors, List<DeviceInfo> devices) {
 
 			List<CSVInfo> CSVInfos = new List<CSVInfo>();
@@ -39,11 +37,23 @@ namespace EZInventory.CSVWriter {
 			return CSVInfos;
 		}
 
-		public int WriteCSV(ComputerInfo computer, List<MonitorInfo> monitors, List<DeviceInfo> devices, string outputPath, bool multipleComputers) {
+		public int WriteCSV(List<CSVInfo> CSVInfos, string outputPath) {
 
-			this.multipleComputers = multipleComputers;
+			//Skip header line if the file already exists
+			CsvConfiguration csvConfig = new CsvConfiguration(CultureInfo.CurrentCulture) {
+				HasHeaderRecord = !File.Exists(outputPath)
+			};
 
-			return WriteCSV(computer, monitors, devices, outputPath);
+			Console.WriteLine("Exporting data to file  " + outputPath);
+			using (var writer = new StreamWriter(outputPath, append: true))
+			using (var csv = new CsvWriter(writer, csvConfig)) {
+				csv.Configuration.RegisterClassMap<CSVInfo.CSVInfoMap>();
+				csv.WriteRecords(CSVInfos);
+				csv.Flush();
+				writer.Flush();
+			}
+
+			return 0;
 		}
 
 		public int WriteCSV(ComputerInfo computer, List<MonitorInfo> monitors, List<DeviceInfo> devices, string outputPath) {
@@ -95,6 +105,38 @@ namespace EZInventory.CSVWriter {
 			return 0;
 		}
 
+		public List<CSVInfo> ReadCSV(string path) {
+
+			List<CSVInfo> readInfo = new List<CSVInfo>();
+
+			using (var reader = new StreamReader(path))
+			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture)) {
+				csv.Configuration.RegisterClassMap<CSVInfo.CSVInfoMap>();
+				readInfo = csv.GetRecords<CSVInfo>().ToList();
+			}
+
+			//readInfo = MergeCSVLists(readInfo, readInfo);
+
+			return readInfo;
+		}
+
+		public List<CSVInfo> MergeCSVLists(List<CSVInfo> l1, List<CSVInfo> l2, bool overrideEntries) {
+
+			List<CSVInfo> returnList = l1;
+
+			foreach (CSVInfo info in l2) {
+				if (overrideEntries) {
+					returnList
+				}
+				else {
+					if (!returnList.Contains(info)) {
+						returnList.Add(info);
+					}
+				}
+				
+			}
+			return returnList;
+		}
 	}
 
 	public class CSVInfo {
@@ -108,6 +150,8 @@ namespace EZInventory.CSVWriter {
 		public string CurrentlyConnected;
 		public string PID;
 		public string VID;
+
+		public CSVInfo() : this("", "", "", "", "", "", "", "", "", "") { }
 
 		public CSVInfo(string computer, string type, string manufacturer, string model, string driverName, string entityName, string serial, string connected, string pid, string vid) {
 			ComputerName = computer;
