@@ -47,6 +47,7 @@ namespace EZInventory {
 						helpMsg += tb + "/RequireSerial - Only include devices with a valid serial number. If not included the software still only includes those with matching VID/PIDs from the usb.ids file" + nl;
 						helpMsg += tb + "/ExcludeMassStorage - Exclude any \"USB Mass Storage\" devices" + nl;
 						helpMsg += tb + "/NoGUI - Run the app in a console window only, command line arguments are the only way to adjust settings." + nl;
+						helpMsg += tb + "/DB - Use a file DB.csv in the same folder as this EXE as a base. Running will update the DB with new info (overwriting old info if needed) as well as an added.csv file and a removed.csv file" + nl;
 
 						Console.WriteLine(helpMsg);
 						//System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
@@ -122,7 +123,12 @@ namespace EZInventory {
 						inputArgs.excludeUSBMassStorage = true;
 						break;
 
-					
+					case "-db":
+					case "/db":
+						inputArgs.db = true;
+						break;
+
+
 					default:
 						Console.WriteLine("Error! Unknown arguments at position " + i + ": " + args[i] + ". Use /? or /help to get information about available commands. Aborting...");
 						//System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically

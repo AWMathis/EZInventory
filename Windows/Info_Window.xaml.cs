@@ -39,6 +39,7 @@ namespace EZInventory {
 		public bool excludeUSBMassStorage;
 		public bool noGUI;
 		public string inputListPath;
+		public bool db;
 	}
 
 	public partial class Info_Window : Window {
@@ -84,7 +85,7 @@ namespace EZInventory {
 			}
 			else { //If using the nogui argument, output everything to the console and don't show a window at all.
 
-				Console.WriteLine("GUI is disabled, running in console only mode" + System.Environment.NewLine);
+				Console.WriteLine("GUI is disabled, running in console only mode, current time is " + DateTime.Now + System.Environment.NewLine);
 
 				string computerListPath = args.inputListPath;
 				if (computerListPath != null) {
@@ -98,17 +99,46 @@ namespace EZInventory {
 						}
 						file.Close();
 
-
+						List<CSVInfo> masterList = new List<CSVInfo>();
 						foreach(string computer in computers) {
 							Console.WriteLine("Querying " + computer + "...");
 							if ((computer != "") && (computer != null)) {
 								try {
-									No_GUI(args, computer);
+									masterList.AddRange(No_GUI(args, computer));
 								} catch {
 									
 								}
-	
+								
+
 							}
+
+						}
+
+						if (args.db == true) {
+
+							if (!File.Exists("db.csv")) {
+								writer.WriteCSV(new List<CSVInfo>());
+							}
+
+							List<CSVInfo> currentDB = writer.ReadCSV("db.csv");
+						    writer.WriteCSV(writer.MergeCSVLists(currentDB, masterList, true), "db.csv");
+							List<CSVInfo> newDB = writer.ReadCSV("db.csv");
+							List<CSVInfo> added = new List<CSVInfo>();
+							List<CSVInfo> removed = new List<CSVInfo>();
+
+							foreach (CSVInfo oldInfo in currentDB) {
+								if (!newDB.Contains(oldInfo)) {
+									removed.Add(oldInfo);
+								}
+							}
+							foreach (CSVInfo newInfo in newDB) {
+								if (!currentDB.Contains(newInfo)) {
+									added.Add(newInfo);
+								}
+							}
+
+							writer.WriteCSV(added, "added.csv");
+							writer.WriteCSV(removed, "removed.csv");
 
 						}
 
@@ -128,7 +158,7 @@ namespace EZInventory {
 			Console.WriteLine();
 		}
 
-		private void No_GUI(InputArgs args, string computerNameOverride) {
+		private List<CSVInfo> No_GUI(InputArgs args, string computerNameOverride) {
 
 			string computerName = computerNameOverride ?? args.computerName ?? System.Environment.MachineName;
 			computerName = computerName.Trim(' ');
@@ -142,18 +172,18 @@ namespace EZInventory {
 			catch (PingException pingException) {
 				Console.WriteLine("Error! Bad hostname: " + computerName +". Skipping...");
 				ping.Dispose();
-				return;
+				return null ;
 			}
 
 			if (pingReply.Status != IPStatus.Success) {
 				ping.Dispose();
-				return;
+				return null;
 			}
 			ping.Dispose();
 
 			if (!infoGetter.connectionTest(computerName)) {
 				Console.WriteLine("WMI/CIM query failed on " + computerName + ". Skipping...");
-				return;
+				return null;
 			}
 
 			Console.WriteLine("Searching info for computer \"" + computerName + "\"..." + System.Environment.NewLine + "-----------------------------------------------------------------------------------" + System.Environment.NewLine);
@@ -173,7 +203,7 @@ namespace EZInventory {
 			
 			if (!infoGetter.registryTest(computerName)) {
 				Console.WriteLine("Registry query failed on " + computerName + ". Skipping devices...");
-				return;
+				return null;
 			}
 
 			deviceInfoList = infoGetter.GetDeviceInfoRegistry(computerName);
@@ -186,9 +216,14 @@ namespace EZInventory {
 				deviceCount++;
 			}
 
+			List<CSVInfo> listToWrite = writer.IngestData(computerInfo, monitorInfoList, deviceInfoList);
+
 			if (args.outputPath != null) {
-				writer.WriteCSV(computerInfo, monitorInfoList, deviceInfoList, args.outputPath);
+				writer.WriteCSV(listToWrite, args.outputPath);
 			}
+
+			return listToWrite;
+
 		}
 
 		private void NewInstanceMenuItem_Click(object sender, RoutedEventArgs e) {
@@ -245,6 +280,7 @@ namespace EZInventory {
 			worker.WorkerReportsProgress = true;
 			worker.RunWorkerAsync(computer);
 
+			writer.WriteCSV(writer.MergeCSVLists(writer.ReadCSV("csv1.csv"), writer.ReadCSV("csv2.csv"), false));
 		}
 
 		private void worker_QueryInfo(object sender, DoWorkEventArgs e) {

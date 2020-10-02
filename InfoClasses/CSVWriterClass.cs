@@ -9,6 +9,7 @@ using CsvHelper.Configuration;
 using Microsoft.Win32;
 using EZInventory.InfoClasses;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 
 namespace EZInventory.CSVWriter {
 	class CSVWriterClass {
@@ -37,7 +38,18 @@ namespace EZInventory.CSVWriter {
 			return CSVInfos;
 		}
 
+
+
+
+		public int WriteCSV(ComputerInfo computer, List<MonitorInfo> monitors, List<DeviceInfo> devices, string outputPath) {
+
+			List<CSVInfo> CSVInfos = IngestData(computer, monitors, devices);
+
+			return WriteCSV(CSVInfos, outputPath);
+		}
 		public int WriteCSV(List<CSVInfo> CSVInfos, string outputPath) {
+
+			CSVInfos = CSVInfos.OrderBy(o => o.ComputerName).ToList();
 
 			//Skip header line if the file already exists
 			CsvConfiguration csvConfig = new CsvConfiguration(CultureInfo.CurrentCulture) {
@@ -56,36 +68,9 @@ namespace EZInventory.CSVWriter {
 			return 0;
 		}
 
-		public int WriteCSV(ComputerInfo computer, List<MonitorInfo> monitors, List<DeviceInfo> devices, string outputPath) {
+		public int WriteCSV(List<CSVInfo> CSVInfos) {
 
-			List<CSVInfo> CSVInfos = IngestData(computer, monitors, devices);
-
-			if (outputPath != null) {
-
-				//Skip header line if the file already exists
-				CsvConfiguration csvConfig = new CsvConfiguration(CultureInfo.CurrentCulture) {
-					HasHeaderRecord = !File.Exists(outputPath)
-				};
-
-				Console.WriteLine("Exporting data to file  " + outputPath);
-				using (var writer = new StreamWriter(outputPath, append: true))
-				using (var csv = new CsvWriter(writer, csvConfig)) {
-					csv.Configuration.RegisterClassMap<CSVInfo.CSVInfoMap>();
-					csv.WriteRecords(CSVInfos);
-					csv.Flush();
-					writer.Flush();
-				}
-			}
-			else {
-				return 1;
-			}
-
-			return 0;
-		}
-
-		public int WriteCSV(ComputerInfo computer, List<MonitorInfo> monitors, List<DeviceInfo> devices) {
-
-			List<CSVInfo> CSVInfos = IngestData(computer, monitors, devices);
+			CSVInfos = CSVInfos.OrderBy(o => o.ComputerName).ToList();
 
 			SaveFileDialog saveFileDialog = new SaveFileDialog();
 			saveFileDialog.Filter = "CSV file (*.csv)|*.csv";
@@ -103,6 +88,15 @@ namespace EZInventory.CSVWriter {
 			}
 
 			return 0;
+
+		}
+
+		public int WriteCSV(ComputerInfo computer, List<MonitorInfo> monitors, List<DeviceInfo> devices) {
+
+			List<CSVInfo> CSVInfos = IngestData(computer, monitors, devices);
+
+			return WriteCSV(CSVInfos);
+			
 		}
 
 		public List<CSVInfo> ReadCSV(string path) {
@@ -115,32 +109,39 @@ namespace EZInventory.CSVWriter {
 				readInfo = csv.GetRecords<CSVInfo>().ToList();
 			}
 
-			//readInfo = MergeCSVLists(readInfo, readInfo);
+			foreach (CSVInfo info in readInfo) {
+				if ((info.TimeStamp == "") || (info.TimeStamp == null)) {
+					info.TimeStamp = 
+						.Now.ToString();
+				}
+			}
 
 			return readInfo;
 		}
 
+		//Merge two lists together. Removes duplicates and any conflicts where the items evaluate as equal it will use the version from l2
 		public List<CSVInfo> MergeCSVLists(List<CSVInfo> l1, List<CSVInfo> l2, bool overrideEntries) {
 
+			int discardThreshold = 5; //If set to override old entries, override entries this many minutes older (default 5 minutes)
 			List<CSVInfo> returnList = new List<CSVInfo>();
 			List<string> alreadyRemoved = new List<string>();
 
-			foreach (CSVInfo info in l1) {
+			//Add L2 first, use it as the base to any conflicts/updates use the version from the more recent list
+			foreach (CSVInfo info in l2) {
 				if (!returnList.Contains(info)) {
 					returnList.Add(info);
 				}		
 			}
 
 
-			foreach (CSVInfo info in l2) {
+			foreach (CSVInfo info in l1) {
 				if (overrideEntries) {
-					//Might have issues if computer, monitors don't match but other stuff does... might be worth switching to detecting the date
 					if (!returnList.Contains(info) && !alreadyRemoved.Contains(info.ComputerName)) {
-						//returnList.RemoveAll(l1Info => (l1Info.ComputerName == info.ComputerName));
-						//returnList.Add(info);
-						//alreadyRemoved.Add(info.ComputerName);
+						returnList.RemoveAll(l1Info => ((l1Info.ComputerName == info.ComputerName) && ( (Convert.ToDateTime(l1Info.TimeStamp)-DateTime.Now).TotalMinutes < discardThreshold) ));
+						
+						returnList.Add(info);
+						alreadyRemoved.Add(info.ComputerName);
 					}
-					
 				}
 				else {
 					if (!returnList.Contains(info)) {
@@ -149,6 +150,7 @@ namespace EZInventory.CSVWriter {
 				}
 				
 			}
+			returnList = returnList.OrderBy(o => o.ComputerName).ToList();
 			return returnList;
 		}
 	}
@@ -179,15 +181,16 @@ namespace EZInventory.CSVWriter {
 			CurrentlyConnected = connected;
 			PID = pid;
 			VID = vid;
-			TimeStamp = DateTime.UtcNow.ToString();
+			TimeStamp = DateTime.Now.ToString();
+			
 		}
 
 
 		public bool Equals(CSVInfo other) {
 
 			bool same = (ComputerName == other.ComputerName) && (DeviceType == other.DeviceType) && (Manufacturer == other.Manufacturer) && (Model == other.Model) 
-			&& (DriverName == other.DriverName) && (PNPEntityName == other.PNPEntityName) && (SerialNumber == other.SerialNumber) 
-			&& (CurrentlyConnected == other.CurrentlyConnected) && (VID == other.VID) && (PID == other.PID);
+			&& (SerialNumber == other.SerialNumber) && (VID == other.VID) && (PID == other.PID);
+			//(CurrentlyConnected == other.CurrentlyConnected) && (DriverName == other.DriverName) && (PNPEntityName == other.PNPEntityName)
 
 			return same;
 		}
@@ -204,7 +207,7 @@ namespace EZInventory.CSVWriter {
 				Map(m => m.CurrentlyConnected).Index(7).Name("Currently Connected");
 				Map(m => m.PID).Index(8).Name("Product ID (PID)");
 				Map(m => m.VID).Index(9).Name("Vendor ID (VID)");
-				Map(m => m.TimeStamp).Index(10).Name("Time last detected");
+				Map(m => m.TimeStamp).Index(10).Name("Time last detected").Optional();
 			}
 		}
 

@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "EZInventory": {
+      "commandName": "Project",
+      "commandLineArgs": "/Computerlist \"computerList.txt\" /decryptserials /nogui /db"
+    }
+  }
+}
