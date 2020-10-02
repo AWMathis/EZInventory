@@ -122,11 +122,25 @@ namespace EZInventory.CSVWriter {
 
 		public List<CSVInfo> MergeCSVLists(List<CSVInfo> l1, List<CSVInfo> l2, bool overrideEntries) {
 
-			List<CSVInfo> returnList = l1;
+			List<CSVInfo> returnList = new List<CSVInfo>();
+			List<string> alreadyRemoved = new List<string>();
+
+			foreach (CSVInfo info in l1) {
+				if (!returnList.Contains(info)) {
+					returnList.Add(info);
+				}		
+			}
+
 
 			foreach (CSVInfo info in l2) {
 				if (overrideEntries) {
-					returnList
+					//Might have issues if computer, monitors don't match but other stuff does... might be worth switching to detecting the date
+					if (!returnList.Contains(info) && !alreadyRemoved.Contains(info.ComputerName)) {
+						//returnList.RemoveAll(l1Info => (l1Info.ComputerName == info.ComputerName));
+						//returnList.Add(info);
+						//alreadyRemoved.Add(info.ComputerName);
+					}
+					
 				}
 				else {
 					if (!returnList.Contains(info)) {
@@ -139,7 +153,7 @@ namespace EZInventory.CSVWriter {
 		}
 	}
 
-	public class CSVInfo {
+	public class CSVInfo : IEquatable<CSVInfo> {
 		public string ComputerName;
 		public string DeviceType;
 		public string Manufacturer;
@@ -150,6 +164,7 @@ namespace EZInventory.CSVWriter {
 		public string CurrentlyConnected;
 		public string PID;
 		public string VID;
+		public string TimeStamp;
 
 		public CSVInfo() : this("", "", "", "", "", "", "", "", "", "") { }
 
@@ -164,8 +179,18 @@ namespace EZInventory.CSVWriter {
 			CurrentlyConnected = connected;
 			PID = pid;
 			VID = vid;
+			TimeStamp = DateTime.UtcNow.ToString();
 		}
 
+
+		public bool Equals(CSVInfo other) {
+
+			bool same = (ComputerName == other.ComputerName) && (DeviceType == other.DeviceType) && (Manufacturer == other.Manufacturer) && (Model == other.Model) 
+			&& (DriverName == other.DriverName) && (PNPEntityName == other.PNPEntityName) && (SerialNumber == other.SerialNumber) 
+			&& (CurrentlyConnected == other.CurrentlyConnected) && (VID == other.VID) && (PID == other.PID);
+
+			return same;
+		}
 
 		public class CSVInfoMap : ClassMap<CSVInfo> {
 			public CSVInfoMap() {
@@ -179,6 +204,7 @@ namespace EZInventory.CSVWriter {
 				Map(m => m.CurrentlyConnected).Index(7).Name("Currently Connected");
 				Map(m => m.PID).Index(8).Name("Product ID (PID)");
 				Map(m => m.VID).Index(9).Name("Vendor ID (VID)");
+				Map(m => m.TimeStamp).Index(10).Name("Time last detected");
 			}
 		}
 
