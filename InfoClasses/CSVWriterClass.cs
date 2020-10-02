@@ -111,8 +111,7 @@ namespace EZInventory.CSVWriter {
 
 			foreach (CSVInfo info in readInfo) {
 				if ((info.TimeStamp == "") || (info.TimeStamp == null)) {
-					info.TimeStamp = 
-						.Now.ToString();
+					info.TimeStamp = DateTime.Now.ToString();
 				}
 			}
 
