@@ -117,11 +117,12 @@ namespace EZInventory {
 						if (args.db == true) {
 
 							if (!File.Exists("db.csv")) {
-								writer.WriteCSV(new List<CSVInfo>());
+								writer.WriteCSV(new List<CSVInfo>(), "db.csv");
 							}
 
 							List<CSVInfo> currentDB = writer.ReadCSV("db.csv");
-						    writer.WriteCSV(writer.MergeCSVLists(currentDB, masterList, true), "db.csv");
+							File.Delete("db.csv");
+						    writer.WriteCSV(writer.MergeCSVLists(currentDB, masterList, false), "db.csv");
 							List<CSVInfo> newDB = writer.ReadCSV("db.csv");
 							List<CSVInfo> added = new List<CSVInfo>();
 							List<CSVInfo> removed = new List<CSVInfo>();
@@ -279,8 +280,6 @@ namespace EZInventory {
 			worker.RunWorkerCompleted += worker_Complete;
 			worker.WorkerReportsProgress = true;
 			worker.RunWorkerAsync(computer);
-
-			writer.WriteCSV(writer.MergeCSVLists(writer.ReadCSV("csv1.csv"), writer.ReadCSV("csv2.csv"), false));
 		}
 
 		private void worker_QueryInfo(object sender, DoWorkEventArgs e) {
