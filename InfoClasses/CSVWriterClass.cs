@@ -19,19 +19,19 @@ namespace EZInventory.CSVWriter {
 			List<CSVInfo> CSVInfos = new List<CSVInfo>();
 			string nul = "N/A";
 
-			CSVInfo computerInfo = new CSVInfo(computer.ComputerName, "Computer", computer.Manufacturer, computer.Model, nul, computer.ComputerName, computer.SerialNumber, "True", nul, nul);
-			CSVInfo osInfo = new CSVInfo(computer.ComputerName, "Operating System", "Microsoft", computer.WindowsVersion, nul, nul, nul, "True", nul, nul);
+			CSVInfo computerInfo = new CSVInfo(computer.ComputerName, "Computer", computer.Manufacturer, computer.Model, nul, computer.ComputerName, computer.SerialNumber, "True", nul, nul, computer.Username);
+			CSVInfo osInfo = new CSVInfo(computer.ComputerName, "Operating System", "Microsoft", computer.WindowsVersion, nul, nul, nul, "True", nul, nul, computer.Username);
 
 			CSVInfos.Add(computerInfo);
 			CSVInfos.Add(osInfo);
 
 			foreach (MonitorInfo monitor in monitors) {
-				CSVInfo monitorInfo = new CSVInfo(computer.ComputerName, "Monitor", monitor.Manufacturer, monitor.Model, nul, nul, monitor.SerialNumber, "True", monitor.ProductID, nul);
+				CSVInfo monitorInfo = new CSVInfo(computer.ComputerName, "Monitor", monitor.Manufacturer, monitor.Model, nul, nul, monitor.SerialNumber, "True", monitor.ProductID, nul, computer.Username);
 				CSVInfos.Add(monitorInfo);
 			}
 
 			foreach (DeviceInfo device in devices) {
-				CSVInfo deviceInfo = new CSVInfo(computer.ComputerName, "Device", device.Manufacturer, device.Model, device.DriverName, device.PNPEntityName, device.SerialNumber, device.Connected.ToString(), device.ProductID, device.VendorID);
+				CSVInfo deviceInfo = new CSVInfo(computer.ComputerName, "Device", device.Manufacturer, device.Model, device.DriverName, device.PNPEntityName, device.SerialNumber, device.Connected.ToString(), device.ProductID, device.VendorID, computer.Username);
 				CSVInfos.Add(deviceInfo);
 			}
 
@@ -146,6 +146,9 @@ namespace EZInventory.CSVWriter {
 					if (!returnList.Contains(info)) {
 						returnList.Add(info);
 					}
+					else {
+						returnList.Find(x => x == info).TimeStamp = info.TimeStamp;
+					}
 				}
 				
 			}
@@ -165,11 +168,12 @@ namespace EZInventory.CSVWriter {
 		public string CurrentlyConnected;
 		public string PID;
 		public string VID;
+		public string CurrentUser;
 		public string TimeStamp;
 
-		public CSVInfo() : this("", "", "", "", "", "", "", "", "", "") { }
+		public CSVInfo() : this("", "", "", "", "", "", "", "", "", "", "") { }
 
-		public CSVInfo(string computer, string type, string manufacturer, string model, string driverName, string entityName, string serial, string connected, string pid, string vid) {
+		public CSVInfo(string computer, string type, string manufacturer, string model, string driverName, string entityName, string serial, string connected, string pid, string vid, string user) {
 			ComputerName = computer;
 			DeviceType = type;
 			Manufacturer = manufacturer;
@@ -180,6 +184,7 @@ namespace EZInventory.CSVWriter {
 			CurrentlyConnected = connected;
 			PID = pid;
 			VID = vid;
+			CurrentUser = user;
 			TimeStamp = DateTime.Now.ToString();
 			
 		}
@@ -206,7 +211,8 @@ namespace EZInventory.CSVWriter {
 				Map(m => m.CurrentlyConnected).Index(7).Name("Currently Connected");
 				Map(m => m.PID).Index(8).Name("Product ID (PID)");
 				Map(m => m.VID).Index(9).Name("Vendor ID (VID)");
-				Map(m => m.TimeStamp).Index(10).Name("Time last detected").Optional();
+				Map(m => m.CurrentUser).Index(10).Name("Current User when detected");
+				Map(m => m.TimeStamp).Index(11).Name("Time last detected").Optional();
 			}
 		}
 

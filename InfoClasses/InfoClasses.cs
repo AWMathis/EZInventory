@@ -9,14 +9,16 @@ namespace EZInventory.InfoClasses{
 		public string SerialNumber;
 		public string WindowsVersion;
 		public string Manufacturer;
+		public string Username;
 
-		public ComputerInfo(string name, string address, string manufacturer, string model, string serial, string version) {
-			ComputerName = (name ?? "").Trim(); ;
-			IPAddress = (address ?? "").Trim(); ;
-			Model = (model ?? "").Trim(); ;
-			Manufacturer = (manufacturer ?? "").Trim(); ;
-			SerialNumber = (serial ?? "").Trim(); ;
-			WindowsVersion = (version ?? "").Trim(); ;
+		public ComputerInfo(string name, string address, string manufacturer, string model, string serial, string version, string username) {
+			ComputerName = (name ?? "").Trim();
+			IPAddress = (address ?? "").Trim();
+			Model = (model ?? "").Trim();
+			Manufacturer = (manufacturer ?? "").Trim();
+			SerialNumber = (serial ?? "").Trim();
+			WindowsVersion = (version ?? "").Trim();
+			Username = (username ?? "").Trim();
 		}
 		public ComputerInfo() {
 			ComputerName = "";
@@ -25,6 +27,7 @@ namespace EZInventory.InfoClasses{
 			Model = "";
 			SerialNumber = "";
 			WindowsVersion = "";
+			Username = "";
 		}
 
 		public override string ToString() {
@@ -37,6 +40,7 @@ namespace EZInventory.InfoClasses{
 			ret += "Model: " + Model + nl;
 			ret += "Serial Number: " + SerialNumber + nl;
 			ret += "Windows Version: " + WindowsVersion + nl;
+			ret += "Current User: " + Username + nl;
 
 			return ret;
 		}
