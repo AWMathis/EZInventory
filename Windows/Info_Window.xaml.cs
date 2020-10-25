@@ -53,12 +53,13 @@ namespace EZInventory {
 
 		public Info_Window() {
 
-
 			InitializeComponent();
 			infoGetter.ParseUSBIDs();
 			StatusBarText.Text = "Ready";
 
-			ComputerName.Focus();
+			ComputerInfoUserControl.ComputerName.Focus();
+
+			ComputerInfoUserControl.searchButtonClickEvent += SearchButton_Click;
 		}
 		public Info_Window(InputArgs args) {
 
@@ -71,17 +72,17 @@ namespace EZInventory {
 				StatusBarText.Text = "Ready";
 
 				//apply variables from args here
-				ComputerName.Text = args.computerName ?? "";
-				IPAddress.Text = args.ipAddress ?? "";
+				ComputerInfoUserControl.ComputerName.Text = args.computerName ?? "";
+				ComputerInfoUserControl.IPAddress.Text = args.ipAddress ?? "";
 				DecryptHexMenuItem.IsChecked = args.decryptSerials;
 				ShowDisconnectedMenuItem.IsChecked = args.showDisconnected;
 				RequireSerialMenuItem.IsChecked = args.requireSerial;
 
-				if (ComputerName.Text != "" || IPAddress.Text != "") {
-					SearchButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent)); //Raise an event as though the search button was clicked
+				if (ComputerInfoUserControl.ComputerName.Text != "" || ComputerInfoUserControl.IPAddress.Text != "") {
+					ComputerInfoUserControl.SearchButton.RaiseEvent(new RoutedEventArgs(System.Windows.Controls.Primitives.ButtonBase.ClickEvent)); //Raise an event as though the search button was clicked
 				}
 
-				ComputerName.Focus();
+				ComputerInfoUserControl.ComputerName.Focus();
 			}
 			else { //If using the nogui argument, output everything to the console and don't show a window at all.
 
@@ -254,20 +255,20 @@ namespace EZInventory {
 			window.Show();
 		}
 
-		private void SearchButton_Click(object sender, RoutedEventArgs e) {
+		private void SearchButton_Click() {
 
 			string computer = "";
 
-			if (ComputerName.Text == "" && IPAddress.Text == "") {
+			if (ComputerInfoUserControl.ComputerName.Text == "" && ComputerInfoUserControl.IPAddress.Text == "") {
 				Console.WriteLine("No name or IP entered, searching local host...");
 				computer = System.Environment.MachineName;
 			}
-			else if (ComputerName.Text == "" && IPAddress.Text != "") {
-				computer = Dns.GetHostAddresses(IPAddress.Text)[0].ToString();
+			else if (ComputerInfoUserControl.ComputerName.Text == "" && ComputerInfoUserControl.IPAddress.Text != "") {
+				computer = Dns.GetHostAddresses(ComputerInfoUserControl.IPAddress.Text)[0].ToString();
 				Console.WriteLine("No name entered, searching by IP...");
 			}
 			else {
-				computer = ComputerName.Text;
+				computer = ComputerInfoUserControl.ComputerName.Text;
 				Console.WriteLine("Searching by hostname...");
 			}
 
@@ -356,12 +357,12 @@ namespace EZInventory {
 
 		public ComputerInfo DisplayComputerInfo() {
 
-			ComputerName.Text = computerInfo.ComputerName;
-			IPAddress.Text = computerInfo.IPAddress;
-			ComputerModel.Text = computerInfo.Model;
-			SerialNumber.Text = computerInfo.SerialNumber;
-			WindowsVersion.Text = computerInfo.WindowsVersion;
-			CurrentUser.Text = computerInfo.Username;
+			ComputerInfoUserControl.ComputerName.Text = computerInfo.ComputerName;
+			ComputerInfoUserControl.IPAddress.Text = computerInfo.IPAddress;
+			ComputerInfoUserControl.ComputerModel.Text = computerInfo.Model;
+			ComputerInfoUserControl.SerialNumber.Text = computerInfo.SerialNumber;
+			ComputerInfoUserControl.WindowsVersion.Text = computerInfo.WindowsVersion;
+			ComputerInfoUserControl.CurrentUser.Text = computerInfo.Username;
 
 			return computerInfo;
 		}

@@ -1,0 +1,135 @@
+﻿<UserControl x:Class="EZInventory.UserControls.ComputerInfoUserControl"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:EZInventory.UserControls"
+			 xmlns:sys="clr-namespace:System;assembly=mscorlib"
+             mc:Ignorable="d" 
+             d:DesignHeight="450" d:DesignWidth="800">
+
+
+	<UserControl.Resources>
+		<sys:Double x:Key="GroupBoxWidth">400</sys:Double>
+		<SolidColorBrush x:Key="HeaderTextColor" Color="LightGreen"/>
+		<SolidColorBrush x:Key="SearchButtonBackgroundColor" Color="White"/>
+		<SolidColorBrush x:Key="ComputerNameColor" Color="LightGreen"/>
+		<SolidColorBrush x:Key="IPAddressColor" Color="Yellow"/>
+		<SolidColorBrush x:Key="WindowsVersionColor" Color="Violet"/>
+		<SolidColorBrush x:Key="SerialNumberColor" Color="LightGreen"/>
+		<SolidColorBrush x:Key="ModelColor" Color="cyan"/>
+		<SolidColorBrush x:Key="CurrentUserColor" Color="Yellow"/>
+		<SolidColorBrush x:Key="AssetTagColor" Color="LightGreen"/>
+
+		<Thickness x:Key="BorderThickness">3</Thickness>
+	</UserControl.Resources>
+
+
+	<Grid>
+
+		<GroupBox Grid.Row="0" Grid.ColumnSpan="3" Height="Auto" Margin="0,0,0,0" BorderThickness="1">
+
+			<GroupBox.Header>
+				<TextBlock FontSize="20" HorizontalAlignment="Center" Foreground="{StaticResource HeaderTextColor}">Computer Info</TextBlock>
+			</GroupBox.Header>
+
+			<Grid>
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+					<RowDefinition Height="Auto"/>
+				</Grid.RowDefinitions>
+
+				<Grid.ColumnDefinitions>
+					<ColumnDefinition/>
+					<ColumnDefinition/>
+					<ColumnDefinition/>
+					<ColumnDefinition/>
+					<ColumnDefinition/>
+				</Grid.ColumnDefinitions>
+
+				<Button Grid.Row="0" Grid.Column="0" x:Name="SearchButton" Click="SearchButton_Click" IsDefault="True" Content="Search" Margin="0,0,0,1" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+
+				<GroupBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="4" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="1,0,0,1">
+					<GroupBox.Header>
+						<TextBlock Text="Computer Name" HorizontalAlignment="Center" Foreground="{StaticResource ComputerNameColor}"/>
+					</GroupBox.Header>
+
+					<Border BorderBrush="{StaticResource ComputerNameColor}" BorderThickness="{StaticResource BorderThickness}">
+						<TextBox x:Name="ComputerName" Margin="0,0,0,0" FontSize="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextAlignment="Center" BorderThickness="0"/>
+					</Border>
+				</GroupBox>
+
+				<GroupBox Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,0,1">
+					<GroupBox.Header>
+						<TextBlock Text="IP Address" Foreground="{StaticResource IPAddressColor}" HorizontalAlignment="Center"/>
+					</GroupBox.Header>
+
+					<Border BorderBrush="{StaticResource IPAddressColor}" BorderThickness="{StaticResource BorderThickness}">
+						<TextBox x:Name="IPAddress" Margin="0,0,0,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextAlignment="Center" BorderThickness="2"/>
+					</Border>
+				</GroupBox>
+
+				<GroupBox Grid.Row="1" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="1,0,0,1">
+					<GroupBox.Header>
+						<TextBlock Text="Windows Version" Foreground="{StaticResource WindowsVersionColor}" HorizontalAlignment="Center"/>
+					</GroupBox.Header>
+
+					<Border BorderBrush="{StaticResource WindowsVersionColor}" BorderThickness="{StaticResource BorderThickness}">
+						<TextBox x:Name="WindowsVersion" Margin="0,0,0,0" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
+					</Border>
+
+				</GroupBox>
+
+				<GroupBox Grid.Row="2" Grid.Column="0" Grid.ColumnSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,0,1">
+					<GroupBox.Header>
+						<TextBlock Text="Serial Number" Foreground="{StaticResource SerialNumberColor}" HorizontalAlignment="Center"/>
+					</GroupBox.Header>
+
+					<Border BorderBrush="{StaticResource SerialNumberColor}" BorderThickness="{StaticResource BorderThickness}">
+						<TextBox x:Name="SerialNumber" Margin="0,0,0,0" FontSize="20" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
+					</Border>
+
+				</GroupBox>
+
+				<GroupBox Grid.Row="2" Grid.Column="2" Grid.ColumnSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="1,0,0,1" BorderBrush="Cyan">
+					<GroupBox.Header>
+						<TextBlock Text="Model" Foreground="{StaticResource ModelColor}" HorizontalAlignment="Center"/>
+					</GroupBox.Header>
+
+					<Border BorderBrush="{StaticResource ModelColor}" BorderThickness="{StaticResource BorderThickness}">
+						<TextBox x:Name="ComputerModel" Margin="0,0,0,0" VerticalContentAlignment="Center" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
+					</Border>
+
+				</GroupBox>
+
+				<GroupBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,0,1">
+					<GroupBox.Header>
+						<TextBlock Text="Current User" Foreground="{StaticResource CurrentUserColor}" HorizontalAlignment="Center"/>
+					</GroupBox.Header>
+
+					<Border BorderBrush="{StaticResource CurrentUserColor}" BorderThickness="{StaticResource BorderThickness}">
+						<TextBox x:Name="CurrentUser" Margin="0,0,0,0" FontSize="20" VerticalContentAlignment="Center" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
+					</Border>
+
+				</GroupBox>
+
+				<GroupBox Grid.Row="3" Grid.Column="3" Grid.ColumnSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="1,0,0,1">
+					<GroupBox.Header>
+						<TextBlock Text="Asset Tag" Foreground="{StaticResource AssetTagColor}" HorizontalAlignment="Center"/>
+					</GroupBox.Header>
+
+					<Border BorderBrush="{StaticResource AssetTagColor}" BorderThickness="{StaticResource BorderThickness}">
+						<TextBox x:Name="AssetTag" Margin="0,0,0,0" FontSize="20" VerticalContentAlignment="Center" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
+					</Border>
+
+				</GroupBox>
+
+			</Grid>
+		</GroupBox>
+
+
+
+	</Grid>
+</UserControl>
