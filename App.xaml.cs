@@ -1,4 +1,5 @@
-﻿using System;
+﻿using EZInventory.Windows;
+using System;
 using System.Windows;
 
 
@@ -19,9 +20,14 @@ namespace EZInventory {
 
 			string[] args = e.Args;
 			InputArgs inputArgs = new InputArgs();
+
+			//Set default arguments
 			inputArgs.noGUI = false;
-			inputArgs.showDisconnected = false;
-			inputArgs.decryptSerials = false;
+			inputArgs.decryptSerials = true;
+			inputArgs.showDisconnected = true;
+			inputArgs.requireSerial = true;
+			inputArgs.excludeUSBMassStorage = false;
+			inputArgs.excludeUSBHubs = false;
 
 			for (int i = 0; i < args.Length; i++) {
 
@@ -139,28 +145,18 @@ namespace EZInventory {
 
 
 
-			if (e.Args.Length >= 1) {
-				Info_Window window = new Info_Window(inputArgs);
-				window.Title = windowName;
-
-				if (inputArgs.noGUI) {
-					//System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
-					this.Shutdown();
-				}
-				else {
-					Console.WriteLine("No Arguments!");
-					window.Show();
-				}
-
-				
+			if (inputArgs.noGUI) {
+				NoGUI_Window window = new NoGUI_Window(inputArgs);
+				//System.Windows.Forms.SendKeys.SendWait("{ENTER}"); //Press enter to return to the command line automatically
+				this.Shutdown();
 			}
 			else {
-				Info_Window window = new Info_Window();
+				Info_Window window = new Info_Window(inputArgs);
 				window.Title = windowName;
 				window.Show();
-			}
+			}	
 
-		}
+	}
 
 		private void Application_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e) {
 			MessageBox.Show("An unhandled exception just occurred: " + e.Exception.Message, "Exception Sample", MessageBoxButton.OK, MessageBoxImage.Warning);

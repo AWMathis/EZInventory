@@ -12,9 +12,15 @@
     <Compile Update="UserControls\ComputerInfoUserControl.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="Windows\NoGUI_Window.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="UserControls\ComputerInfoUserControl.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="Windows\NoGUI_Window.xaml">
       <SubType>Designer</SubType>
     </Page>
   </ItemGroup>
