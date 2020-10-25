@@ -140,7 +140,7 @@ namespace EZInventory.InfoClasses {
 			return monitorInfos;
 		}
 
-		public List<MonitorInfo> FilterMonitorInfo(List<MonitorInfo> toFilter, bool decryptHex) {
+		public List<MonitorInfo> FilterMonitorInfo(List<MonitorInfo> toFilter, InputArgs args) {
 			List<MonitorInfo> monitorInfoListModified = new List<MonitorInfo>(toFilter.Count); //Perform a deep copy to allow different display options without modifying the data
 			foreach (MonitorInfo info in toFilter) {
 				monitorInfoListModified.Add(new MonitorInfo(info));
@@ -149,7 +149,7 @@ namespace EZInventory.InfoClasses {
 
 			foreach (MonitorInfo monitor in monitorInfoListModified) {
 
-				if (decryptHex) {
+				if (args.decryptSerials) {
 					monitor.SerialNumber = TestForHex(monitor.SerialNumber);
 				}
 
@@ -289,31 +289,35 @@ namespace EZInventory.InfoClasses {
 			return deviceInfos;
 		}
 
-		public List<DeviceInfo> FilterDeviceInfo(List<DeviceInfo> toFilter, bool decryptHex, bool showDisconnected, bool requireSerial, bool excludeMassStorage) {
+		public List<DeviceInfo> FilterDeviceInfo(List<DeviceInfo> toFilter, InputArgs args) {
 
 			List<DeviceInfo> deviceInfoListModified = new List<DeviceInfo>(toFilter.Count); //Perform a deep copy to allow different display options without modifying the data
 			foreach (DeviceInfo info in toFilter) {
 				deviceInfoListModified.Add(new DeviceInfo(info));
 			}
 
-			if (showDisconnected == false) {
+			if (args.showDisconnected == false) {
 				deviceInfoListModified.RemoveAll(info => info.Connected == false);
 			}
 
-			if (requireSerial == true) {
+			if (args.requireSerial == true) {
 				deviceInfoListModified.RemoveAll(info => (info.SerialNumber == null) || (info.SerialNumber == "") || (info.SerialNumber == "?????"));
 			}
 
-			if (excludeMassStorage == true) {
+			if (args.excludeUSBMassStorage == true) {
 				deviceInfoListModified.RemoveAll(info => (info.DriverName == "USB Mass Storage Device") || (info.PNPEntityName == "USB Mass Storage Device"));
 			}
 
+			if (args.excludeUSBHubs == true) {
+				deviceInfoListModified.RemoveAll(info => (info.DriverName == "Generic USB Hub") || (info.PNPEntityName == "Generic USB Hub") || (info.DriverName == "Generic SuperSpeed USB Hub") || (info.PNPEntityName == "Generic SuperSpeed USB Hub"));
+			}
+
 			if(true) {
-				deviceInfoListModified.RemoveAll(info => (info.Model == "?????") || (info.Manufacturer == "?????"));
+				//deviceInfoListModified.RemoveAll(info => (info.Model == "?????") || (info.Manufacturer == "?????"));
 			}
 
 			foreach (DeviceInfo device in deviceInfoListModified) {
-				if (decryptHex) {
+				if (args.decryptSerials) {
 					device.SerialNumber = TestForHex(device.SerialNumber);
 				}
 			}

@@ -44,6 +44,7 @@
 					<MenuItem x:Name="ShowDisconnectedMenuItem" Header="Show Disconnected" IsCheckable="True" IsChecked="True" StaysOpenOnClick="True" Click="ChangeDisplayOption_Click" ToolTip="Show or hide disconnected devices when searching"/>
 					<MenuItem x:Name="RequireSerialMenuItem" Header="Require Serial Number" IsCheckable="True" IsChecked="True" StaysOpenOnClick="True" Click="ChangeDisplayOption_Click" ToolTip="Only display devices with known serial numbers (still requires VID/PID to be identified)"/>
 					<MenuItem x:Name="ExcludeMassStorageMenuItem" Header="Exclude USB Mass Storage" IsCheckable="True" IsChecked="False" StaysOpenOnClick="True" Click="ChangeDisplayOption_Click" ToolTip="Exclude USB Mass Storage devices, useful for preventing clutter"/>
+					<MenuItem x:Name="ExcludeUSBHubsMenuItem" Header="Exclude Generic USB Hubs" IsCheckable="True" IsChecked="False" StaysOpenOnClick="True" Click="ChangeDisplayOption_Click" ToolTip="Exclude Generic USB Hubs, useful for preventing clutter"/>
 				</MenuItem>
 				<MenuItem x:Name="AboutMenuItem" Header="About" Click="AboutMenuItem_Click"/>
 			</Menu>

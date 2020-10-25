@@ -38,6 +38,7 @@ namespace EZInventory {
 		public bool requireSerial;
 		public bool excludeUSBMassStorage;
 		public bool noGUI;
+		public bool excludeUSBHubs;
 		public string inputListPath;
 		public bool db;
 	}
@@ -51,6 +52,8 @@ namespace EZInventory {
 		private List<MonitorInfo> monitorInfoList = new List<MonitorInfo>();
 		private List<DeviceInfo> deviceInfoList = new List<DeviceInfo>();
 
+		private InputArgs globalArgs;
+
 		public Info_Window() {
 
 			InitializeComponent();
@@ -62,6 +65,8 @@ namespace EZInventory {
 			ComputerInfoUserControl.searchButtonClickEvent += SearchButton_Click;
 		}
 		public Info_Window(InputArgs args) {
+
+			globalArgs = args;
 
 			infoGetter.USBIDSPath = args.usbIDSPath;
 			infoGetter.ParseUSBIDs();
@@ -162,6 +167,8 @@ namespace EZInventory {
 
 		private List<CSVInfo> No_GUI(InputArgs args, string computerNameOverride) {
 
+			globalArgs = args;
+
 			string computerName = computerNameOverride ?? args.computerName ?? System.Environment.MachineName;
 			computerName = computerName.Trim(' ');
 
@@ -194,7 +201,7 @@ namespace EZInventory {
 			Console.WriteLine(computerInfo.ToString());
 
 			monitorInfoList = infoGetter.GetMonitorInfo(computerName);
-			monitorInfoList = infoGetter.FilterMonitorInfo(monitorInfoList, args.decryptSerials);
+			monitorInfoList = infoGetter.FilterMonitorInfo(monitorInfoList, args);
 			Console.WriteLine("-----------------------------------Monitor Info------------------------------------");
 			int monitorCount = 1;
 			foreach (MonitorInfo m in monitorInfoList) {
@@ -209,7 +216,7 @@ namespace EZInventory {
 			}
 
 			deviceInfoList = infoGetter.GetDeviceInfoRegistry(computerName);
-			deviceInfoList = infoGetter.FilterDeviceInfo(deviceInfoList, args.decryptSerials, args.showDisconnected, args.requireSerial, args.excludeUSBMassStorage);
+			deviceInfoList = infoGetter.FilterDeviceInfo(deviceInfoList, globalArgs);
 			Console.WriteLine("-----------------------------------Device Info-------------------------------------");
 			int deviceCount = 1;
 			foreach (DeviceInfo d in deviceInfoList) {
@@ -237,16 +244,19 @@ namespace EZInventory {
 		}
 
 		private void ExportMenuItem_Click(object sender, RoutedEventArgs e) {
-			writer.WriteCSV(DisplayComputerInfo(), DisplayMonitorInfo(), DisplayDeviceInfo());
+			writer.WriteCSV(DisplayComputerInfo(computerInfo), DisplayMonitorInfo(monitorInfoList), DisplayDeviceInfo(deviceInfoList));
 		}
 
 		private void ChangeDisplayOption_Click(object sender, RoutedEventArgs e) {
-			DisplayMonitorInfo();
-			DisplayDeviceInfo();
-		}
 
-		private void SwitchBaseThemeMenuItem_Click(object sender, RoutedEventArgs e) {
+			globalArgs.decryptSerials = DecryptHexMenuItem.IsChecked;
+			globalArgs.showDisconnected = ShowDisconnectedMenuItem.IsChecked;
+			globalArgs.requireSerial = RequireSerialMenuItem.IsChecked;
+			globalArgs.excludeUSBMassStorage = ExcludeMassStorageMenuItem.IsChecked;
+			globalArgs.excludeUSBHubs = ExcludeUSBHubsMenuItem.IsChecked;
 
+			DisplayMonitorInfo(monitorInfoList);
+			DisplayDeviceInfo(deviceInfoList);
 		}
 
 		private void AboutMenuItem_Click(object sender, RoutedEventArgs e) {
@@ -326,17 +336,17 @@ namespace EZInventory {
 				case 2:
 					StatusBarText.Text = "Querying Monitor Info...";
 					computerInfo = (ComputerInfo)e.UserState;
-					DisplayComputerInfo();
+					DisplayComputerInfo(computerInfo);
 					break;
 				case 3:
 					StatusBarText.Text = "Querying Device Info... (this might take a minute)";
 					monitorInfoList = (List<MonitorInfo>)e.UserState;
-					DisplayMonitorInfo();
+					DisplayMonitorInfo(monitorInfoList);
 					break;
 				case 4:
 					StatusBarText.Text = "Populating Device Info...";
 					deviceInfoList = (List<DeviceInfo>)e.UserState;
-					DisplayDeviceInfo();
+					DisplayDeviceInfo(deviceInfoList);
 					break;
 				case 5:
 					StatusBarText.Text = "Ready";
@@ -355,52 +365,51 @@ namespace EZInventory {
 			
 		}
 
-		public ComputerInfo DisplayComputerInfo() {
+		public ComputerInfo DisplayComputerInfo(ComputerInfo info) {
 
-			ComputerInfoUserControl.ComputerName.Text = computerInfo.ComputerName;
-			ComputerInfoUserControl.IPAddress.Text = computerInfo.IPAddress;
-			ComputerInfoUserControl.ComputerModel.Text = computerInfo.Model;
-			ComputerInfoUserControl.SerialNumber.Text = computerInfo.SerialNumber;
-			ComputerInfoUserControl.WindowsVersion.Text = computerInfo.WindowsVersion;
-			ComputerInfoUserControl.CurrentUser.Text = computerInfo.Username;
+			ComputerInfoUserControl.ComputerName.Text = info.ComputerName;
+			ComputerInfoUserControl.IPAddress.Text = info.IPAddress;
+			ComputerInfoUserControl.ComputerModel.Text = info.Model;
+			ComputerInfoUserControl.SerialNumber.Text = info.SerialNumber;
+			ComputerInfoUserControl.WindowsVersion.Text = info.WindowsVersion;
+			ComputerInfoUserControl.CurrentUser.Text = info.Username;
 
-			return computerInfo;
+			return info;
 		}
 
-		private List<MonitorInfo> DisplayMonitorInfo() {
+		private List<MonitorInfo> DisplayMonitorInfo(List<MonitorInfo> info) {
 
 			MonitorInfoStackPanel.Children.Clear();
 
-			List<MonitorInfo> monitorInfoListModified = infoGetter.FilterMonitorInfo(monitorInfoList, DecryptHexMenuItem.IsChecked);
+			List<MonitorInfo> monitorInfoListModified = infoGetter.FilterMonitorInfo(info, globalArgs);
 
 			int monitorCount = 1;
-			foreach (MonitorInfo monitor in monitorInfoList) {
+			foreach (MonitorInfo monitor in monitorInfoListModified) {
 
-				MonitorInfoUserControl info = new MonitorInfoUserControl(monitor);
-				info.Title = "Monitor " + monitorCount;
+				MonitorInfoUserControl monitorInfo = new MonitorInfoUserControl(monitor);
+				monitorInfo.Title = "Monitor " + monitorCount;
 				monitorCount++;
-				MonitorInfoStackPanel.Children.Add(info);
+				MonitorInfoStackPanel.Children.Add(monitorInfo);
 			}
 
 			return monitorInfoListModified;
 		}
 
-		private List<DeviceInfo> DisplayDeviceInfo() {
+		private List<DeviceInfo> DisplayDeviceInfo(List<DeviceInfo> info) {
 
 			DeviceInfoStackPanel.Children.Clear();
 			int deviceCount = 1;
-			List<DeviceInfo> deviceInfoListModified = infoGetter.FilterDeviceInfo(deviceInfoList, DecryptHexMenuItem.IsChecked, ShowDisconnectedMenuItem.IsChecked, RequireSerialMenuItem.IsChecked, ExcludeMassStorageMenuItem.IsChecked);
+			List<DeviceInfo> deviceInfoListModified = infoGetter.FilterDeviceInfo(info, globalArgs);
 
 			foreach (DeviceInfo device in deviceInfoListModified) {
 
-				DeviceInfoUserControl info = new DeviceInfoUserControl(device);
-				info.Title = "Device " + deviceCount;
+				DeviceInfoUserControl deviceInfo = new DeviceInfoUserControl(device);
+				deviceInfo.Title = "Device " + deviceCount;
 
 				deviceCount += 1;
 
-				DeviceInfoStackPanel.Children.Add(info);
+				DeviceInfoStackPanel.Children.Add(deviceInfo);
 			}
-
 			return deviceInfoListModified;
 		}
 
