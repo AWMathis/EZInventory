@@ -85,7 +85,6 @@
 					<Grid.ColumnDefinitions>
 						<ColumnDefinition Width="Auto"/>
 						<ColumnDefinition Width="*"/>
-						<ColumnDefinition Width="*"/>
 					</Grid.ColumnDefinitions>
 
 					<GroupBox Grid.Row="0" Grid.Column="0" HorizontalAlignment="Stretch" Margin="0,0,0,0" Padding="0,0,0,0" BorderThickness="0">
@@ -95,7 +94,7 @@
 						</GroupBox.Header>
 
 						<Border BorderBrush="{StaticResource ManufacturerColor}" BorderThickness="{StaticResource BorderThickness}">
-							<TextBox x:Name="DeviceManufacturer" Margin="0,0,0,0" FontSize="20" TextAlignment="Center" Text="{Binding Manufacturer}" BorderThickness="0">
+							<TextBox x:Name="DeviceManufacturer" Margin="0,0,0,0" FontSize="20" TextAlignment="Center" Text="{Binding Manufacturer}" BorderThickness="0" MaxWidth="225">
 									<TextBox.ToolTip>
 										<TextBlock>
 											<Run Text="VID = "/>
@@ -106,7 +105,7 @@
 						</Border>
 					</GroupBox>
 
-					<GroupBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="2" HorizontalAlignment="Stretch" Margin="1,0,0,0"  Padding="0,0,0,0" BorderThickness="0">
+					<GroupBox Grid.Row="0" Grid.Column="1" Grid.ColumnSpan="1" HorizontalAlignment="Stretch" Margin="1,0,0,0"  Padding="0,0,0,0" BorderThickness="0">
 
 						<GroupBox.Header>
 							<TextBlock Text="DRIVER/DEVICE NAME(S)" HorizontalAlignment="Center" Foreground="{StaticResource DriverColor}"/>
