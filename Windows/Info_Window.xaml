@@ -18,6 +18,8 @@
 		<SolidColorBrush x:Key="WindowsVersionColor" Color="Violet"/>
 		<SolidColorBrush x:Key="SerialNumberColor" Color="LightGreen"/>
 		<SolidColorBrush x:Key="ModelColor" Color="cyan"/>
+		<SolidColorBrush x:Key="CurrentUserColor" Color="Yellow"/>
+		<SolidColorBrush x:Key="AssetTagColor" Color="LightGreen"/>
 
 		<Thickness x:Key="BorderThickness">3</Thickness>
 	</Window.Resources>
@@ -78,6 +80,7 @@
 
 					<Grid>
 						<Grid.RowDefinitions>
+							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="Auto"/>
 							<RowDefinition Height="Auto"/>
@@ -144,6 +147,28 @@
 								<TextBox x:Name="ComputerModel" Margin="0,0,0,0" VerticalContentAlignment="Center" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
 							</Border>
 							
+						</GroupBox>
+
+						<GroupBox Grid.Row="3" Grid.Column="0" Grid.ColumnSpan="3" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="0,0,0,1">
+							<GroupBox.Header>
+								<TextBlock Text="Current User" Foreground="{StaticResource CurrentUserColor}" HorizontalAlignment="Center"/>
+							</GroupBox.Header>
+
+							<Border BorderBrush="{StaticResource CurrentUserColor}" BorderThickness="{StaticResource BorderThickness}">
+								<TextBox x:Name="CurrentUser" Margin="0,0,0,0" FontSize="20" VerticalContentAlignment="Center" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
+							</Border>
+
+						</GroupBox>
+
+						<GroupBox Grid.Row="3" Grid.Column="3" Grid.ColumnSpan="2" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="1,0,0,1">
+							<GroupBox.Header>
+								<TextBlock Text="Asset Tag" Foreground="{StaticResource AssetTagColor}" HorizontalAlignment="Center"/>
+							</GroupBox.Header>
+
+							<Border BorderBrush="{StaticResource AssetTagColor}" BorderThickness="{StaticResource BorderThickness}">
+								<TextBox x:Name="AssetTag" Margin="0,0,0,0" FontSize="20" VerticalContentAlignment="Center" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" TextAlignment="Center" BorderThickness="0" IsReadOnly="True"/>
+							</Border>
+
 						</GroupBox>
 
 					</Grid>

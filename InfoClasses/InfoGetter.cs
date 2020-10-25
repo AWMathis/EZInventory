@@ -69,6 +69,9 @@ namespace EZInventory.InfoClasses {
 			ManagementObjectCollection windowsInfoCollection = CIMQuery(computer, "Win32_OperatingSystem");
 			ManagementObject windowsInfo = windowsInfoCollection.OfType<ManagementObject>().First();
 
+			ManagementObjectCollection enclosureInfoCollection = CIMQuery(computer, "Win32_SystemEnclosure");
+			ManagementObject enclosureInfo = enclosureInfoCollection.OfType<ManagementObject>().First();
+
 			string name = computerInfo["Name"].ToString();
 			string address = computerIP;
 			string manufacturer = computerInfo["Manufacturer"].ToString();
@@ -76,7 +79,8 @@ namespace EZInventory.InfoClasses {
 			string serial = biosInfo["SerialNumber"].ToString();
 			string version = windowsInfo["Caption"] + " " + windowsInfo["OSArchitecture"] + " (" + windowsInfo["Version"] + ")";
 			string username = computerInfo["Username"].ToString();
-			ComputerInfo info = new ComputerInfo(name, address, manufacturer, model, serial, version, username);
+			string assettag = enclosureInfo["SMBIOSAssetTag"].ToString();
+			ComputerInfo info = new ComputerInfo(name, address, manufacturer, model, serial, version, username, assettag);
 			return info;
 		}
 

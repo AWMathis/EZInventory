@@ -361,6 +361,7 @@ namespace EZInventory {
 			ComputerModel.Text = computerInfo.Model;
 			SerialNumber.Text = computerInfo.SerialNumber;
 			WindowsVersion.Text = computerInfo.WindowsVersion;
+			CurrentUser.Text = computerInfo.Username;
 
 			return computerInfo;
 		}

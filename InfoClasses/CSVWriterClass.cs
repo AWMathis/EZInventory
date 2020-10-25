@@ -19,7 +19,7 @@ namespace EZInventory.CSVWriter {
 			List<CSVInfo> CSVInfos = new List<CSVInfo>();
 			string nul = "N/A";
 
-			CSVInfo computerInfo = new CSVInfo(computer.ComputerName, "Computer", computer.Manufacturer, computer.Model, nul, computer.ComputerName, computer.SerialNumber, "True", nul, nul, computer.Username);
+			CSVInfo computerInfo = new CSVInfo(computer.ComputerName, "Computer", computer.Manufacturer, computer.Model, "Asset Tag: " + computer.AssetTag, computer.ComputerName, computer.SerialNumber, "True", nul, nul, computer.Username);
 			CSVInfo osInfo = new CSVInfo(computer.ComputerName, "Operating System", "Microsoft", computer.WindowsVersion, nul, nul, nul, "True", nul, nul, computer.Username);
 
 			CSVInfos.Add(computerInfo);
