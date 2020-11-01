@@ -28,21 +28,6 @@ add an about screen to the menu
 
 namespace EZInventory {
 
-	public struct InputArgs {
-		public string computerName;
-		public string ipAddress;
-		public string usbIDSPath;
-		public string outputPath;
-		public bool showDisconnected;
-		public bool decryptSerials;
-		public bool requireSerial;
-		public bool excludeUSBMassStorage;
-		public bool noGUI;
-		public bool excludeUSBHubs;
-		public string inputListPath;
-		public bool db;
-	}
-
 	public partial class Info_Window : Window {
 
 		private InfoGetter infoGetter = new InfoGetter();
@@ -221,6 +206,7 @@ namespace EZInventory {
 			ComputerInfoUserControl.SerialNumber.Text = info.SerialNumber;
 			ComputerInfoUserControl.WindowsVersion.Text = info.WindowsVersion;
 			ComputerInfoUserControl.CurrentUser.Text = info.Username;
+			ComputerInfoUserControl.AssetTag.Text = info.AssetTag;
 
 			return info;
 		}

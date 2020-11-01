@@ -53,48 +53,94 @@ namespace EZInventory.InfoClasses{
 
 }
 
-	public class MonitorInfo {
-		public string Manufacturer;
-		public string Model;
-		public string SerialNumber;
-		public string ProductID;
+public class MonitorInfo {
+	public string Manufacturer;
+	public string Model;
+	public string SerialNumber;
+	public string ProductID;
+	public int VideoOutputType;
 
-		public MonitorInfo() {
-			Manufacturer = "";
-			Model = "";
-			SerialNumber = "";
-			ProductID = "";
+	public MonitorInfo() {
+		Manufacturer = "";
+		Model = "";
+		SerialNumber = "";
+		ProductID = "";
+		VideoOutputType = 0;
+	}
+	public MonitorInfo(string manufacturer, string model, string serial, string productID, int outputType) {
+		Manufacturer = (manufacturer ?? "").Trim();
+		Model = (model ?? "").Trim();
+		SerialNumber = (serial ?? "").Trim();
+		ProductID = (productID ?? "").Trim();
+		VideoOutputType = (outputType);
+	}
+	public MonitorInfo(MonitorInfo info) {
+		Manufacturer = info.Manufacturer;
+		Model = info.Model;
+		SerialNumber = info.SerialNumber;
+		ProductID = info.ProductID;
+		VideoOutputType = info.VideoOutputType;
+	}
+
+	public MonitorInfo Copy() {
+		return new MonitorInfo(this);
+	}
+
+
+	public override string ToString() {
+		string ret = "";
+		string nl = System.Environment.NewLine;
+
+		ret += "Manufacturer: " + Manufacturer + nl;
+		ret += "Model: " + Model + nl;
+		ret += "Serial Number: " + SerialNumber + nl;
+		ret += "Product ID (PID): " + ProductID + nl;
+		ret += "Video Output Technology: " + VideoOutputTechnologyLookup(VideoOutputType) + " (" + VideoOutputType + ")"+ nl;
+
+		return ret;
+	}
+
+	public string VideoOutputTechnologyLookup(int type) {
+		switch(type) {
+			case -2:
+				return "UNINITIALIZED";
+			case -1:
+				return "OTHER";
+			case 0:
+				return "HD15";
+			case 1:
+				return "SVIDEO";
+			case 2:
+				return "COMPOSITE_VIDEO";
+			case 3:
+				return "COMPONENT_VIDEO";
+			case 4:
+				return "DVI";
+			case 5:
+				return "HDMI";
+			case 6:
+				return "LVDS";
+			case 8:
+				return "D_JPN";
+			case 9:
+				return "SDI";
+			case 10:
+				return "DISPLAYPORT_EXTERNAL";
+			case 11:
+				return "DISPLAYPORT_EMBEDDED";
+			case 12:
+				return "UDI_EXTERNAL";
+			case 13:
+				return "UDI_EMBEDDED";
+			case 14:
+				return "SVTVDONGLE";
+			case 15:
+				return "MIRACAST";
+			default:
+				return null;
 		}
-		public MonitorInfo(string manufacturer, string model, string serial, string productID) {
-			Manufacturer = (manufacturer ?? "").Trim();
-			Model = (model ?? "").Trim();
-			SerialNumber = (serial ?? "").Trim();
-			ProductID = (productID ?? "").Trim();
-		}
-
-		public MonitorInfo(MonitorInfo info) {
-			Manufacturer = info.Manufacturer;
-			Model = info.Model;
-			SerialNumber = info.SerialNumber;
-			ProductID = info.ProductID;
-		}
-
-		public MonitorInfo Copy() {
-			return new MonitorInfo(this);
-		}
-
-
-		public override string ToString() {
-			string ret = "";
-			string nl = System.Environment.NewLine;
-
-			ret += "Manufacturer: " + Manufacturer + nl;
-			ret += "Model: " + Model + nl;
-			ret += "Serial Number: " + SerialNumber + nl;
-			ret += "Product ID (PID): " + ProductID + nl;
-
-			return ret;
-		}
+		return null;
+	}
 }
 
 	public class DeviceInfo {

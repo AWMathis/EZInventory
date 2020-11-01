@@ -28,6 +28,9 @@ namespace EZInventory {
 			inputArgs.requireSerial = true;
 			inputArgs.excludeUSBMassStorage = false;
 			inputArgs.excludeUSBHubs = false;
+			inputArgs.excludeInternalDisplays = true;
+
+			inputArgs.dbNoOverwrite = true;
 
 			for (int i = 0; i < args.Length; i++) {
 
@@ -131,9 +134,17 @@ namespace EZInventory {
 
 					case "-db":
 					case "/db":
-						inputArgs.db = true;
+						//Database Name
+						if (i + 1 < args.Length) {
+							i++;
+							inputArgs.dbName = args[i];
+						}
 						break;
 
+					case "-dbnoverwrite":
+					case "/dbnooverwrite":
+						inputArgs.dbNoOverwrite = false;
+						break;
 
 					default:
 						Console.WriteLine("Error! Unknown arguments at position " + i + ": " + args[i] + ". Use /? or /help to get information about available commands. Aborting...");

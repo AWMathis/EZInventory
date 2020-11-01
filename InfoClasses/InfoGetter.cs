@@ -72,14 +72,14 @@ namespace EZInventory.InfoClasses {
 			ManagementObjectCollection enclosureInfoCollection = CIMQuery(computer, "Win32_SystemEnclosure");
 			ManagementObject enclosureInfo = enclosureInfoCollection.OfType<ManagementObject>().First();
 
-			string name = computerInfo["Name"].ToString();
+			string name = (computerInfo["Name"] ?? "N/A").ToString();
 			string address = computerIP;
-			string manufacturer = computerInfo["Manufacturer"].ToString();
-			string model = (computerInfo["Manufacturer"].ToString()) + " " + (computerInfo["Model"].ToString());
-			string serial = biosInfo["SerialNumber"].ToString();
-			string version = windowsInfo["Caption"] + " " + windowsInfo["OSArchitecture"] + " (" + windowsInfo["Version"] + ")";
-			string username = computerInfo["Username"].ToString();
-			string assettag = enclosureInfo["SMBIOSAssetTag"].ToString();
+			string manufacturer = (computerInfo["Manufacturer"] ?? "N/A").ToString();
+			string model = (computerInfo["Manufacturer"] ?? "N/A").ToString() + " " + (computerInfo["Model"].ToString());
+			string serial = (biosInfo["SerialNumber"]  ?? "N/A").ToString();
+			string version = (windowsInfo["Caption"] ?? "N/A") + " " + (windowsInfo["OSArchitecture"] ?? "????") + " (" + (windowsInfo["Version"] ?? "????") + ")";
+			string username = (computerInfo["Username"] ?? "N/A").ToString();
+			string assettag = (enclosureInfo["SMBIOSAssetTag"] ?? "N/A").ToString();
 			ComputerInfo info = new ComputerInfo(name, address, manufacturer, model, serial, version, username, assettag);
 			return info;
 		}
@@ -90,6 +90,7 @@ namespace EZInventory.InfoClasses {
 			List<MonitorInfo> monitorInfos = new List<MonitorInfo>();
 
 			ManagementObjectCollection monitors = WMIQuery(computer, "WMIMonitorID");
+			ManagementObjectCollection monitorConnectionParams = WMIQuery(computer, "WmiMonitorconnectionparams");
 
 			try {
 				int test = monitors.Count;
@@ -130,9 +131,18 @@ namespace EZInventory.InfoClasses {
 						foreach (UInt16 i in (UInt16[])monitor["ManufacturerName"]) {
 							monitorManufacturer += (char)i;
 						}
-					} catch {}							
+					} catch {}
 
-					monitorInfos.Add(new MonitorInfo(monitorManufacturer, monitorModel, monitorSerial, monitorPID));
+					int monitorVideoOutputTechnology = 0;
+					try {
+						foreach (ManagementObject monitorConnection in monitorConnectionParams) {
+							if (monitorConnection["InstanceName"].ToString() == monitor["InstanceName"].ToString()) {
+								monitorVideoOutputTechnology = Int32.Parse(monitorConnection["VideoOutputTechnology"].ToString());
+							}
+						}
+					} catch { }
+
+					monitorInfos.Add(new MonitorInfo(monitorManufacturer, monitorModel, monitorSerial, monitorPID, monitorVideoOutputTechnology));
 
 				}
 			}
@@ -153,6 +163,10 @@ namespace EZInventory.InfoClasses {
 					monitor.SerialNumber = TestForHex(monitor.SerialNumber);
 				}
 
+				//Filter out internal monitors here
+				if (args.excludeInternalDisplays) {
+					monitorInfoListModified.RemoveAll(monitor => (monitor.VideoOutputType == 11) || (monitor.VideoOutputType == 13) || (monitor.VideoOutputType > 15));
+				}
 
 			}
 

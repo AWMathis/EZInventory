@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.NetworkInformation;
 using System.Windows;
+using System.Linq;
 
 
 namespace EZInventory.Windows {
@@ -25,9 +26,10 @@ namespace EZInventory.Windows {
 
 		public NoGUI_Window(InputArgs args) {
 			Console.WriteLine("GUI is disabled, running in console only mode, current time is " + DateTime.Now + System.Environment.NewLine);
-
+			List<CSVInfo> masterList = new List<CSVInfo>();
 			globalArgs = args;
 
+			//Queries a list of computers in a file
 			string computerListPath = args.inputListPath;
 			if (computerListPath != null) {
 				if (File.Exists(computerListPath)) {
@@ -40,64 +42,66 @@ namespace EZInventory.Windows {
 					}
 					file.Close();
 
-					List<CSVInfo> masterList = new List<CSVInfo>();
 					foreach (string computer in computers) {
 						Console.WriteLine("Querying " + computer + "...");
 						if ((computer != "") && (computer != null)) {
 							try {
-								masterList.AddRange(No_GUI(args, computer));
+								masterList.AddRange(QueryInfo(args, computer));
 							}
 							catch {
+								CSVInfo offline = new CSVInfo();
+								offline.ComputerName = computer; 
+								offline.DeviceType = "Offline";
 
+								//Add an offline entry only if the object doesn't already exist in the DB
+								var match = from info in masterList where ((info.ComputerName == computer) & info.DeviceType != "Offline") select new {name = info.ComputerName};
+								if (match != null) {
+									masterList.Add(offline);
+								}
+								
 							}
-
-
 						}
-
 					}
-
-					if (args.db == true) {
-
-						if (!File.Exists("db.csv")) {
-							writer.WriteCSV(new List<CSVInfo>(), "db.csv");
-						}
-
-						List<CSVInfo> currentDB = writer.ReadCSV("db.csv");
-						File.Delete("db.csv");
-						writer.WriteCSV(writer.MergeCSVLists(currentDB, masterList, false), "db.csv");
-						List<CSVInfo> newDB = writer.ReadCSV("db.csv");
-						List<CSVInfo> added = new List<CSVInfo>();
-						List<CSVInfo> removed = new List<CSVInfo>();
-
-						foreach (CSVInfo oldInfo in currentDB) {
-							if (!newDB.Contains(oldInfo)) {
-								removed.Add(oldInfo);
-							}
-						}
-						foreach (CSVInfo newInfo in newDB) {
-							if (!currentDB.Contains(newInfo)) {
-								added.Add(newInfo);
-							}
-						}
-
-						writer.WriteCSV(added, "added.csv");
-						writer.WriteCSV(removed, "removed.csv");
-
-					}
-
 				}
 				else {
 					Console.WriteLine("Error! A list of computer names was supplied but the file doesn't exist or couldn't be opened! Aborting...");
 					return;
 				}
-
 			}
-			else {
-				No_GUI(args, null);
+			else { //Queries a single specified pc, or the local pc if no name is given
+				masterList.AddRange(QueryInfo(args, null));
+			}
+
+			if ((args.dbName != null) && (args.dbName != "")) {
+
+				if (!File.Exists(args.dbName)) {
+					writer.WriteCSV(new List<CSVInfo>(), args.dbName);
+				}
+
+				List<CSVInfo> currentDB = writer.ReadCSV(args.dbName);
+				File.Delete(args.dbName);
+				writer.WriteCSV(writer.MergeCSVLists(currentDB, masterList, args.dbNoOverwrite), args.dbName);
+				List<CSVInfo> newDB = writer.ReadCSV(args.dbName);
+				List<CSVInfo> added = new List<CSVInfo>();
+				List<CSVInfo> removed = new List<CSVInfo>();
+
+				foreach (CSVInfo oldInfo in currentDB) {
+					if (!newDB.Contains(oldInfo)) {
+						removed.Add(oldInfo);
+					}
+				}
+				foreach (CSVInfo newInfo in newDB) {
+					if (!currentDB.Contains(newInfo)) {
+						added.Add(newInfo);
+					}
+				}
+
+				writer.WriteCSV(added, "added.csv");
+				writer.WriteCSV(removed, "removed.csv");
 			}
 		}
 
-		private List<CSVInfo> No_GUI(InputArgs args, string computerNameOverride) {
+		private List<CSVInfo> QueryInfo(InputArgs args, string computerNameOverride) {
 
 			string computerName = computerNameOverride ?? args.computerName ?? System.Environment.MachineName;
 			computerName = computerName.Trim(' ');
