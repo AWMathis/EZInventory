@@ -6,7 +6,7 @@ using System.IO;
 using System.Net.NetworkInformation;
 using System.Windows;
 using System.Linq;
-
+using System.ComponentModel;
 
 namespace EZInventory.Windows {
 	/// <summary>
@@ -23,6 +23,9 @@ namespace EZInventory.Windows {
 
 		private InputArgs globalArgs;
 
+		private List<CSVInfo> masterList = new List<CSVInfo>();
+
+		private int finishedThreads = 0;
 
 		public NoGUI_Window(InputArgs args) {
 			Console.WriteLine("GUI is disabled, running in console only mode, current time is " + DateTime.Now + System.Environment.NewLine);
@@ -46,7 +49,8 @@ namespace EZInventory.Windows {
 						Console.WriteLine("Querying " + computer + "...");
 						if ((computer != "") && (computer != null)) {
 							try {
-								masterList.AddRange(QueryInfo(args, computer));
+								//masterList.AddRange(QueryInfoNew(args, computer));
+								QueryInfoNew(args, computer);
 							}
 							catch {
 								CSVInfo offline = new CSVInfo();
@@ -58,9 +62,11 @@ namespace EZInventory.Windows {
 								if (match != null) {
 									masterList.Add(offline);
 								}
-								
 							}
 						}
+					}
+					while (finishedThreads < computers.Count) {
+
 					}
 				}
 				else {
@@ -71,6 +77,8 @@ namespace EZInventory.Windows {
 			else { //Queries a single specified pc, or the local pc if no name is given
 				masterList.AddRange(QueryInfo(args, null));
 			}
+
+			
 
 			if ((args.dbName != null) && (args.dbName != "")) {
 
@@ -169,6 +177,67 @@ namespace EZInventory.Windows {
 
 		}
 
+		private void QueryInfoNew(InputArgs args, string computerNameOverride) {
+			string computerName = computerNameOverride ?? args.computerName ?? System.Environment.MachineName;
+			computerName = computerName.Trim(' ');
 
+			Ping ping = new Ping();
+			PingReply pingReply = null;
+
+			try {
+				pingReply = ping.Send(computerName, 1000);
+			}
+			catch (PingException pingException) {
+				Console.WriteLine("Error! Bad hostname: " + computerName + ". Skipping...");
+				ping.Dispose();
+				return;
+			}
+
+			if (pingReply.Status != IPStatus.Success) {
+				ping.Dispose();
+				return;
+			}
+			ping.Dispose();
+
+			if (!infoGetter.connectionTest(computerName)) {
+				Console.WriteLine("WMI/CIM query failed on " + computerName + ". Skipping...");
+				return;
+			}
+
+
+			BackgroundWorker worker = new BackgroundWorker();
+			worker.DoWork += worker_QueryInfo;
+			//worker.ProgressChanged += worker_ProgressChanged;
+			worker.RunWorkerCompleted += worker_Complete;
+			worker.WorkerReportsProgress = true;
+			worker.RunWorkerAsync(computerName);
+
+		}
+
+		private void worker_QueryInfo(object sender, DoWorkEventArgs e) {
+
+			string computer = (string)e.Argument;
+
+			InfoGetter infoGetter = new InfoGetter();
+			ComputerInfo computerInfo = infoGetter.GetComputerInfo(computer);
+			List<MonitorInfo>  monitorInfos = infoGetter.GetMonitorInfo(computer);
+			infoGetter.FilterMonitorInfo(monitorInfoList, globalArgs);
+			List<DeviceInfo> deviceInfos = infoGetter.GetDeviceInfoRegistry(computer);
+			infoGetter.FilterDeviceInfo(deviceInfoList, globalArgs);
+
+			List<CSVInfo> returnInfo = writer.IngestData(computerInfo, monitorInfos, deviceInfos);
+			//(sender as BackgroundWorker).ReportProgress(4, deviceInfos);
+
+			e.Result = returnInfo;
+
+		}
+
+
+		private void worker_Complete(object sender, RunWorkerCompletedEventArgs e) {
+
+			List<CSVInfo> result = (List<CSVInfo>)e.Result;
+			masterList.AddRange(result);
+			finishedThreads += 1;
+		}
 	}
 }
