@@ -2,7 +2,7 @@
   "profiles": {
     "EZInventory": {
       "commandName": "Project",
-      "commandLineArgs": "/computerlist computerlist.txt /nogui"
+      "commandLineArgs": "/computer alisluminis /db db.csv /optimal"
     }
   }
 }

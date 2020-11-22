@@ -1,15 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Windows;
+﻿using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace EZInventory.UserControls {
 	/// <summary>
@@ -28,12 +18,36 @@ namespace EZInventory.UserControls {
 
 		//Used to pass the button click to the main window
 		private void SearchButton_Click(object sender, RoutedEventArgs e) {
-
+			Clear();
 			var handler = searchButtonClickEvent;
 
 			if (searchButtonClickEvent != null) {
 				searchButtonClickEvent();
 			}
+
+		}
+
+		private void Clear() {
+			string saveComputerName = null;
+			string saveIP = null;
+			if (ComputerName.Text == null && IPAddress.Text == null) {
+				saveComputerName = System.Environment.MachineName;
+			}
+			else if (ComputerName.Text == null && IPAddress.Text != null) {
+				saveIP = IPAddress.Text;
+			}
+			else {
+				saveComputerName = ComputerName.Text;
+			}
+
+			ComputerName.Text = saveComputerName ?? "";
+			IPAddress.Text = saveIP ?? "";
+			WindowsVersion.Text = "";
+			SerialNumber.Text = "";
+			ComputerModel.Text = "";
+			CurrentUser.Text = "";
+			AssetTag.Text = "";
+
 
 		}
 

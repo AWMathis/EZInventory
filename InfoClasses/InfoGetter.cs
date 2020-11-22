@@ -14,10 +14,13 @@ namespace EZInventory.InfoClasses {
 
 		private Dictionary<string, VendorInfo> usbIDDictionary;
 		private string unknownValue = "?????";
+
 		public string USBIDSPath{ get; set; }
 
 		public InfoGetter() {
 			usbIDDictionary = new Dictionary<string, VendorInfo>();
+
+			ParseUSBIDs();
 
 		}
 
@@ -78,9 +81,13 @@ namespace EZInventory.InfoClasses {
 			string model = (computerInfo["Manufacturer"] ?? "N/A").ToString() + " " + (computerInfo["Model"].ToString());
 			string serial = (biosInfo["SerialNumber"]  ?? "N/A").ToString();
 			string version = (windowsInfo["Caption"] ?? "N/A") + " " + (windowsInfo["OSArchitecture"] ?? "????") + " (" + (windowsInfo["Version"] ?? "????") + ")";
+
 			string username = (computerInfo["Username"] ?? "N/A").ToString();
+			username = username.Remove(0,username.LastIndexOf("\\")+1); //+1 to remove slashes
+
+			string displayName = new ADQuerier().GetDisplayName(username);
 			string assettag = (enclosureInfo["SMBIOSAssetTag"] ?? "N/A").ToString();
-			ComputerInfo info = new ComputerInfo(name, address, manufacturer, model, serial, version, username, assettag);
+			ComputerInfo info = new ComputerInfo(name, address, manufacturer, model, serial, version, username, displayName, assettag);
 			return info;
 		}
 
@@ -107,7 +114,9 @@ namespace EZInventory.InfoClasses {
 					string monitorModel = "";
 					try {
 						foreach (UInt16 i in (UInt16[])monitor["UserFriendlyName"]) {
-							monitorModel += (char)i;
+							if ((char)i != '\0') {
+								monitorModel += (char)i;
+							}
 						}
 					} catch {}
 
@@ -115,21 +124,27 @@ namespace EZInventory.InfoClasses {
 					string monitorSerial = "";
 					try {
 						foreach (UInt16 i in (UInt16[])monitor["SerialNumberID"]) {
-							monitorSerial += (char)i;
+							if ((char)i != '\0') {
+								monitorSerial += (char)i;
+							}
 						}
 					} catch {}
 
 					string monitorPID = "";
 					try {
 						foreach (UInt16 i in (UInt16[])monitor["ProductCodeID"]) {
-							monitorPID += (char)i;
+							if ((char)i != '\0') {
+								monitorPID += (char)i;
+							}
 						}
 					} catch {}					
 
 					string monitorManufacturer = "";
 					try {
 						foreach (UInt16 i in (UInt16[])monitor["ManufacturerName"]) {
-							monitorManufacturer += (char)i;
+							if ((char)i != '\0') {
+								monitorManufacturer += (char)i;
+							}
 						}
 					} catch {}
 
@@ -158,18 +173,16 @@ namespace EZInventory.InfoClasses {
 
 
 			foreach (MonitorInfo monitor in monitorInfoListModified) {
-
 				if (args.decryptSerials) {
 					monitor.SerialNumber = TestForHex(monitor.SerialNumber);
 				}
-
-				//Filter out internal monitors here
-				if (args.excludeInternalDisplays) {
-					monitorInfoListModified.RemoveAll(monitor => (monitor.VideoOutputType == 11) || (monitor.VideoOutputType == 13) || (monitor.VideoOutputType > 15));
-				}
-
 			}
 
+			//Filter out internal monitors here
+			if (args.excludeInternalDisplays) {
+				monitorInfoListModified.RemoveAll(monitor => ((monitor.VideoOutputType == 0) || (monitor.Model == "")) || (monitor.VideoOutputType == 11) || (monitor.VideoOutputType == 13) || (monitor.VideoOutputType > 15));
+			}
+				
 			return monitorInfoListModified;
 		}
 
@@ -188,48 +201,63 @@ namespace EZInventory.InfoClasses {
 			RegistryKey regKey = remoteReg.OpenSubKey("SYSTEM").OpenSubKey("CurrentControlSet").OpenSubKey("Enum").OpenSubKey("USB");
 
 			int deviceIndex = 0; //deviceIndex is the array index for the current device. If there's multiple subkeys, their values are merged into... say... deviceIDs[deviceIndex-1] which is for the last device added.
+
+			if (regKey == null || regKey.GetSubKeyNames() == null) {
+				Console.WriteLine("No USB devices detected in the registry. Aborting...");
+				return deviceInfos;
+			}
+			
 			foreach (string keyName in regKey.GetSubKeyNames()) { //Search registry for previously connected USB devices
-
 				foreach (string subKeyName in regKey.OpenSubKey(keyName).GetSubKeyNames()) {
+					try {
+						if ((keyName.Split('&').Length == 2)) {//if (!subKeyName.Any(ch => !Char.IsLetterOrDigit(ch))) {  //If subkey name could plausably be a serial number (no weird characters)
+							deviceIDs.Add(keyName);
+							if (!subKeyName.Any(ch => !Char.IsLetterOrDigit(ch))) { serialNumbers.Add(subKeyName); } else { serialNumbers.Add(unknownValue);  } 
+							
+							string mfg = "";
 
-					if ((keyName.Split('&').Length == 2)) {//if (!subKeyName.Any(ch => !Char.IsLetterOrDigit(ch))) {  //If subkey name could plausably be a serial number (no weird characters)
-						deviceIDs.Add(keyName);
-						if (!subKeyName.Any(ch => !Char.IsLetterOrDigit(ch))) { serialNumbers.Add(subKeyName); } else { serialNumbers.Add(unknownValue);  } 
-						
-						string mfg = "";
-						if (regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValueNames().Contains("Mfg")) {
-							mfg = regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("Mfg").ToString();
-						}
-						if (mfg.Split(';').Length > 1) {manufacturers.Add(mfg.Split(';')[1]);}
-						else {manufacturers.Add(mfg);}
-
-						string deviceDesc = "";
-						if (regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValueNames().Contains("DeviceDesc")) {
-							deviceDesc = regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("DeviceDesc").ToString(); 
-						}
-						if (deviceDesc.Split(';').Length > 1) {driverNames.Add(deviceDesc.Split(';')[1]);}
-						else {driverNames.Add(deviceDesc);}
-
-
-						deviceIndex++;
-						break;
-					}
-					else if (keyName.Split('&').Length > 2) { //Add devices with same VID/PID but different after
-						if (deviceIDs.Contains(keyName.Split('&')[0] + "&" + keyName.Split('&')[1])) { //If VID/PID already exists (i.e. if this references an existing device)
-							string driverDesc = regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("DeviceDesc").ToString();
-							if (driverDesc.Split(';').Length > 1) {
-								string driverName = driverDesc.Split(';')[1];
-								if (!driverNames[deviceIndex - 1].Contains(driverName)) { driverNames[deviceIndex - 1] = driverName + "; " + driverNames[deviceIndex - 1]; } //Prevent duplicate entries
-								//driverNames[deviceIndex - 1] = driverDesc.Split(';')[1] + "; " + driverNames[deviceIndex - 1];
+							if (regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValueNames() == null) {
+								break;
 							}
-							else {
-								string driverName = driverDesc;
-								if (!driverNames[deviceIndex - 1].Contains(driverName)) { driverNames[deviceIndex - 1] = driverName + "; " + driverNames[deviceIndex - 1]; ; } //Prevent duplicate entries
-								//driverNames[deviceIndex - 1] = driverDesc + "; " + driverNames[deviceIndex - 1];
+							
+							if (regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValueNames().Contains("Mfg")) {
+								mfg = regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("Mfg").ToString();
 							}
+							if (mfg.Split(';').Length > 1) {manufacturers.Add(mfg.Split(';')[1]);}
+							else {manufacturers.Add(mfg);}
 
+							string deviceDesc = "";
+							if (regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValueNames().Contains("DeviceDesc")) {
+								deviceDesc = regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("DeviceDesc").ToString(); 
+							}
+							if (deviceDesc.Split(';').Length > 1) {driverNames.Add(deviceDesc.Split(';')[1]);}
+							else {driverNames.Add(deviceDesc);}
+
+
+							deviceIndex++;
+							break;
+						}
+						else if (keyName.Split('&').Length > 2) { //Add devices with same VID/PID but different after
+							if (deviceIDs.Contains(keyName.Split('&')[0] + "&" + keyName.Split('&')[1])) { //If VID/PID already exists (i.e. if this references an existing device)
+								string driverDesc = regKey.OpenSubKey(keyName).OpenSubKey(subKeyName).GetValue("DeviceDesc").ToString();
+								if (driverDesc.Split(';').Length > 1) {
+									string driverName = driverDesc.Split(';')[1];
+									if (!driverNames[deviceIndex - 1].Contains(driverName)) { driverNames[deviceIndex - 1] = driverName + "; " + driverNames[deviceIndex - 1]; } //Prevent duplicate entries
+									//driverNames[deviceIndex - 1] = driverDesc.Split(';')[1] + "; " + driverNames[deviceIndex - 1];
+								}
+								else {
+									string driverName = driverDesc;
+									if (!driverNames[deviceIndex - 1].Contains(driverName)) { driverNames[deviceIndex - 1] = driverName + "; " + driverNames[deviceIndex - 1]; ; } //Prevent duplicate entries
+									//driverNames[deviceIndex - 1] = driverDesc + "; " + driverNames[deviceIndex - 1];
+								}
+
+							}
 						}
 					}
+					catch {
+						Console.WriteLine("Error reading registry on computer " + computer + ". Aborting...");
+					}
+					
 
 				}
 
@@ -326,7 +354,7 @@ namespace EZInventory.InfoClasses {
 				deviceInfoListModified.RemoveAll(info => (info.DriverName == "Generic USB Hub") || (info.PNPEntityName == "Generic USB Hub") || (info.DriverName == "Generic SuperSpeed USB Hub") || (info.PNPEntityName == "Generic SuperSpeed USB Hub"));
 			}
 
-			if(true) {
+			if (true) {
 				//deviceInfoListModified.RemoveAll(info => (info.Model == "?????") || (info.Manufacturer == "?????"));
 			}
 
@@ -356,11 +384,6 @@ namespace EZInventory.InfoClasses {
 				usbIDS = System.IO.File.ReadAllText("usb.ids");
 			}
 			else {
-				//usbIDS = System.Text.Encoding.Default.GetString("MiscFiles\\usb.ids");
-
-				//using Stream stream = this.GetType().Assembly.GetManifestResourceStream("usb.ids");
-				//using StreamReader sr = new StreamReader(stream);
-				//usbIDS = sr.ReadToEnd();
 
 				var embeddedProvider = new EmbeddedFileProvider(Assembly.GetEntryAssembly());
 				var fileInfo = embeddedProvider.GetFileInfo("MiscFiles\\usb.ids");
@@ -420,7 +443,7 @@ namespace EZInventory.InfoClasses {
 					i++;
 				}
 			}
-			Console.WriteLine("usb.ids has finished parsing");
+			//Console.WriteLine("usb.ids has finished parsing");
 		}
 
 		private (string mfg, string dev) DeviceIDLookup(string vendorID, string deviceID) {

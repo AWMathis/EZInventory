@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Net.NetworkInformation;
 using System.Windows;
-using System.Linq;
 using System.ComponentModel;
 
 namespace EZInventory.Windows {
@@ -14,71 +13,63 @@ namespace EZInventory.Windows {
 	/// </summary>
 	public partial class NoGUI_Window : Window {
 
-		private InfoGetter infoGetter = new InfoGetter();
 		private CSVWriterClass writer = new CSVWriterClass();
-
-		private ComputerInfo computerInfo = new ComputerInfo();
-		private List<MonitorInfo> monitorInfoList = new List<MonitorInfo>();
-		private List<DeviceInfo> deviceInfoList = new List<DeviceInfo>();
 
 		private InputArgs globalArgs;
 
 		private List<CSVInfo> masterList = new List<CSVInfo>();
-
-		private int finishedThreads = 0;
+		private List<String> computerList;
+		private List<BackgroundWorker> backgroundWorkers;
 
 		public NoGUI_Window(InputArgs args) {
-			Console.WriteLine("GUI is disabled, running in console only mode, current time is " + DateTime.Now + System.Environment.NewLine);
-			List<CSVInfo> masterList = new List<CSVInfo>();
+
 			globalArgs = args;
 
-			//Queries a list of computers in a file
-			string computerListPath = args.inputListPath;
-			if (computerListPath != null) {
-				if (File.Exists(computerListPath)) {
-					List<string> computers = new List<string>();
-					string currentLine;
-					// Read the file
-					System.IO.StreamReader file = new System.IO.StreamReader(computerListPath);
-					while ((currentLine = file.ReadLine()) != null) {
-						computers.Add(currentLine);
-					}
-					file.Close();
-
-					foreach (string computer in computers) {
-						Console.WriteLine("Querying " + computer + "...");
-						if ((computer != "") && (computer != null)) {
-							try {
-								//masterList.AddRange(QueryInfoNew(args, computer));
-								QueryInfoNew(args, computer);
-							}
-							catch {
-								CSVInfo offline = new CSVInfo();
-								offline.ComputerName = computer; 
-								offline.DeviceType = "Offline";
-
-								//Add an offline entry only if the object doesn't already exist in the DB
-								var match = from info in masterList where ((info.ComputerName == computer) & info.DeviceType != "Offline") select new {name = info.ComputerName};
-								if (match != null) {
-									masterList.Add(offline);
-								}
-							}
-						}
-					}
-					while (finishedThreads < computers.Count) {
-
-					}
+			if (computerList == null) {
+				if ((args.inputListPath != null) && (args.inputListPath != "")) {
+					computerList = ReadInComputerNames(args.inputListPath);
+				}
+				else if ((args.computerName != null) && (args.computerName != "")) {
+					computerList = new List<string>();
+					computerList.Add(args.computerName);
 				}
 				else {
-					Console.WriteLine("Error! A list of computer names was supplied but the file doesn't exist or couldn't be opened! Aborting...");
+					computerList = new List<string>();
+					computerList.Add(System.Environment.MachineName);
+				}
+			}
+
+			if (backgroundWorkers == null) {
+				createBackgroundWorkers(computerList);
+			}
+
+		}
+		public List<string> ReadInComputerNames(string computerListPath) {
+			if (File.Exists(computerListPath)) {
+				List<string> computers = new List<string>();
+				string currentLine;
+				// Read the file
+				System.IO.StreamReader file = new System.IO.StreamReader(computerListPath);
+				while ((currentLine = file.ReadLine()) != null) {
+					computers.Add(currentLine.Trim(' '));
+				}
+				file.Close();
+				return computers;
+			}
+			else {
+				Console.WriteLine("Error! A list of computer names was supplied but the file doesn't exist or couldn't be opened! Aborting...");
+				return new List<string>();
+			}
+		}
+
+		public void checkBackgroundWorkerCompletion() {
+			foreach (BackgroundWorker b in backgroundWorkers) {
+				if (b.IsBusy && b != null) {
 					return;
 				}
 			}
-			else { //Queries a single specified pc, or the local pc if no name is given
-				masterList.AddRange(QueryInfo(args, null));
-			}
 
-			
+			InputArgs args = globalArgs;
 
 			if ((args.dbName != null) && (args.dbName != "")) {
 
@@ -88,7 +79,7 @@ namespace EZInventory.Windows {
 
 				List<CSVInfo> currentDB = writer.ReadCSV(args.dbName);
 				File.Delete(args.dbName);
-				writer.WriteCSV(writer.MergeCSVLists(currentDB, masterList, args.dbNoOverwrite), args.dbName);
+				writer.WriteCSV(writer.MergeCSVLists(currentDB, masterList), args.dbName);
 				List<CSVInfo> newDB = writer.ReadCSV(args.dbName);
 				List<CSVInfo> added = new List<CSVInfo>();
 				List<CSVInfo> removed = new List<CSVInfo>();
@@ -106,138 +97,83 @@ namespace EZInventory.Windows {
 
 				writer.WriteCSV(added, "added.csv");
 				writer.WriteCSV(removed, "removed.csv");
+
+				System.Windows.Application.Current.Shutdown();
 			}
 		}
-
-		private List<CSVInfo> QueryInfo(InputArgs args, string computerNameOverride) {
-
-			string computerName = computerNameOverride ?? args.computerName ?? System.Environment.MachineName;
-			computerName = computerName.Trim(' ');
-
-			Ping ping = new Ping();
-			PingReply pingReply = null;
-
-			try {
-				pingReply = ping.Send(computerName, 1000);
+		public void createBackgroundWorkers(List<string> computerList) {
+			backgroundWorkers = new List<BackgroundWorker>();
+			foreach (string c in computerList) {
+				Console.WriteLine("Creating BG Worker for computer " + c);
+				BackgroundWorker worker = new BackgroundWorker();
+				worker.DoWork += worker_QueryInfo;
+				worker.RunWorkerCompleted += worker_Complete;
+				backgroundWorkers.Add(worker);
+				worker.RunWorkerAsync(c);
 			}
-			catch (PingException pingException) {
-				Console.WriteLine("Error! Bad hostname: " + computerName + ". Skipping...");
-				ping.Dispose();
-				return null;
-			}
-
-			if (pingReply.Status != IPStatus.Success) {
-				ping.Dispose();
-				return null;
-			}
-			ping.Dispose();
-
-			if (!infoGetter.connectionTest(computerName)) {
-				Console.WriteLine("WMI/CIM query failed on " + computerName + ". Skipping...");
-				return null;
-			}
-
-			Console.WriteLine("Searching info for computer \"" + computerName + "\"..." + System.Environment.NewLine + "-----------------------------------------------------------------------------------" + System.Environment.NewLine);
-			ComputerInfo computerInfo = infoGetter.GetComputerInfo(computerName);
-			Console.WriteLine("-----------------------------------Computer Info-----------------------------------");
-			Console.WriteLine(computerInfo.ToString());
-
-			monitorInfoList = infoGetter.GetMonitorInfo(computerName);
-			monitorInfoList = infoGetter.FilterMonitorInfo(monitorInfoList, args);
-			Console.WriteLine("-----------------------------------Monitor Info------------------------------------");
-			int monitorCount = 1;
-			foreach (MonitorInfo m in monitorInfoList) {
-				Console.WriteLine("---------------------------------Monitor " + monitorCount + "-----------------------------------");
-				Console.WriteLine(m.ToString());
-				monitorCount++;
-			}
-
-			if (!infoGetter.registryTest(computerName)) {
-				Console.WriteLine("Registry query failed on " + computerName + ". Skipping devices...");
-				return null;
-			}
-
-			deviceInfoList = infoGetter.GetDeviceInfoRegistry(computerName);
-			deviceInfoList = infoGetter.FilterDeviceInfo(deviceInfoList, globalArgs);
-			Console.WriteLine("-----------------------------------Device Info-------------------------------------");
-			int deviceCount = 1;
-			foreach (DeviceInfo d in deviceInfoList) {
-				Console.WriteLine("---------------------------------Device " + deviceCount + "------------------------------------");
-				Console.WriteLine(d.ToString());
-				deviceCount++;
-			}
-
-			List<CSVInfo> listToWrite = writer.IngestData(computerInfo, monitorInfoList, deviceInfoList);
-
-			if (args.outputPath != null) {
-				writer.WriteCSV(listToWrite, args.outputPath);
-			}
-
-			return listToWrite;
-
-		}
-
-		private void QueryInfoNew(InputArgs args, string computerNameOverride) {
-			string computerName = computerNameOverride ?? args.computerName ?? System.Environment.MachineName;
-			computerName = computerName.Trim(' ');
-
-			Ping ping = new Ping();
-			PingReply pingReply = null;
-
-			try {
-				pingReply = ping.Send(computerName, 1000);
-			}
-			catch (PingException pingException) {
-				Console.WriteLine("Error! Bad hostname: " + computerName + ". Skipping...");
-				ping.Dispose();
-				return;
-			}
-
-			if (pingReply.Status != IPStatus.Success) {
-				ping.Dispose();
-				return;
-			}
-			ping.Dispose();
-
-			if (!infoGetter.connectionTest(computerName)) {
-				Console.WriteLine("WMI/CIM query failed on " + computerName + ". Skipping...");
-				return;
-			}
-
-
-			BackgroundWorker worker = new BackgroundWorker();
-			worker.DoWork += worker_QueryInfo;
-			//worker.ProgressChanged += worker_ProgressChanged;
-			worker.RunWorkerCompleted += worker_Complete;
-			worker.WorkerReportsProgress = true;
-			worker.RunWorkerAsync(computerName);
-
 		}
 
 		private void worker_QueryInfo(object sender, DoWorkEventArgs e) {
 
-			string computer = (string)e.Argument;
+			try {
+				Ping ping = new Ping();
+				PingReply pingReply = null;
 
-			InfoGetter infoGetter = new InfoGetter();
-			ComputerInfo computerInfo = infoGetter.GetComputerInfo(computer);
-			List<MonitorInfo>  monitorInfos = infoGetter.GetMonitorInfo(computer);
-			infoGetter.FilterMonitorInfo(monitorInfoList, globalArgs);
-			List<DeviceInfo> deviceInfos = infoGetter.GetDeviceInfoRegistry(computer);
-			infoGetter.FilterDeviceInfo(deviceInfoList, globalArgs);
+				try {
+					pingReply = ping.Send((string)e.Argument, 1000);
+				}
+				catch (PingException pingException) {
+					Console.WriteLine("Error! Bad hostname: " + (string)e.Argument + ". Skipping...");
+					ping.Dispose();
+					return;
+				}
 
-			List<CSVInfo> returnInfo = writer.IngestData(computerInfo, monitorInfos, deviceInfos);
-			//(sender as BackgroundWorker).ReportProgress(4, deviceInfos);
+				if (pingReply.Status != IPStatus.Success) {
+					ping.Dispose();
+					return;
+				}
+				ping.Dispose();
 
-			e.Result = returnInfo;
+				InfoGetter infoGetter = new InfoGetter();
+				infoGetter.USBIDSPath = globalArgs.usbIDSPath;
+				if (!infoGetter.connectionTest((string)e.Argument)) {
+					Console.WriteLine("WMI/CIM query failed on " + (string)e.Argument + ". Skipping...");
+					return;
+				}
 
+				if (!infoGetter.registryTest((string)e.Argument)) {
+					Console.WriteLine("Registry query failed on " + (string)e.Argument + ". Skipping...");
+					return;
+				}
+
+				string computer = (string)e.Argument;
+				
+				ComputerInfo computerInfo = infoGetter.GetComputerInfo(computer);
+				List<MonitorInfo>  monitorInfos = infoGetter.GetMonitorInfo(computer);
+				monitorInfos = infoGetter.FilterMonitorInfo(monitorInfos, globalArgs);
+				List<DeviceInfo> deviceInfos = infoGetter.GetDeviceInfoRegistry(computer);
+				deviceInfos = infoGetter.FilterDeviceInfo(deviceInfos, globalArgs);
+
+				List<CSVInfo> returnInfo = writer.IngestData(computerInfo, monitorInfos, deviceInfos);
+				e.Result = returnInfo;
+			}
+			catch {
+				Console.WriteLine("Unknown unhandled error querying " + e.Argument + ". Aborting...");
+				e.Result = null;
+			}
+
+			
 		}
 
-
 		private void worker_Complete(object sender, RunWorkerCompletedEventArgs e) {
-
-			List<CSVInfo> result = (List<CSVInfo>)e.Result;
-			masterList.AddRange(result);
-			finishedThreads += 1;
+			if (e.Result != null) {
+				List<CSVInfo> result = (List<CSVInfo>)e.Result;
+				if (result.Count >= 1) {
+					Console.WriteLine("Finished Querying " + result[0].ComputerName);
+					masterList.AddRange(result);
+				}
+			}
+			checkBackgroundWorkerCompletion();
 		}
 	}
 }

@@ -12,7 +12,6 @@
 		public bool excludeUSBHubs;
 		public string inputListPath;
 		public string dbName;
-		public bool dbNoOverwrite;
 		public bool excludeInternalDisplays;
 	}
 }

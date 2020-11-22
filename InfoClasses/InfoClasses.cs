@@ -1,6 +1,5 @@
 ﻿using System.Collections.Generic;
 
-
 namespace EZInventory.InfoClasses{
 	public class ComputerInfo {
 		public string ComputerName;
@@ -10,9 +9,10 @@ namespace EZInventory.InfoClasses{
 		public string WindowsVersion;
 		public string Manufacturer;
 		public string Username;
+		public string UsernameDisplayName;
 		public string AssetTag;
 
-		public ComputerInfo(string name, string address, string manufacturer, string model, string serial, string version, string username, string assettag) {
+		public ComputerInfo(string name, string address, string manufacturer, string model, string serial, string version, string username, string displayName, string assettag) {
 			ComputerName = (name ?? "").Trim();
 			IPAddress = (address ?? "").Trim();
 			Model = (model ?? "").Trim();
@@ -20,6 +20,7 @@ namespace EZInventory.InfoClasses{
 			SerialNumber = (serial ?? "").Trim();
 			WindowsVersion = (version ?? "").Trim();
 			Username = (username ?? "").Trim();
+			UsernameDisplayName = (displayName ?? "").Trim();
 			AssetTag = (assettag == serial) ? "" : (assettag ?? "").Trim();
 		}
 
@@ -31,6 +32,7 @@ namespace EZInventory.InfoClasses{
 			SerialNumber = "";
 			WindowsVersion = "";
 			Username = "";
+			UsernameDisplayName = "";
 			AssetTag = "";
 		}
 
@@ -44,7 +46,7 @@ namespace EZInventory.InfoClasses{
 			ret += "Model: " + Model + nl;
 			ret += "Serial Number: " + SerialNumber + nl;
 			ret += "Windows Version: " + WindowsVersion + nl;
-			ret += "Current User: " + Username + nl;
+			ret += "Current User: " + UsernameDisplayName + " (" + Username + ")" + nl;
 			ret += "Asset Tag: " + AssetTag + nl;
 
 			return ret;
@@ -59,6 +61,7 @@ public class MonitorInfo {
 	public string SerialNumber;
 	public string ProductID;
 	public int VideoOutputType;
+	public string VideoOutputTypeFriendly;
 
 	public MonitorInfo() {
 		Manufacturer = "";
@@ -66,6 +69,7 @@ public class MonitorInfo {
 		SerialNumber = "";
 		ProductID = "";
 		VideoOutputType = 0;
+		VideoOutputTypeFriendly = VideoOutputTechnologyLookup(VideoOutputType);
 	}
 	public MonitorInfo(string manufacturer, string model, string serial, string productID, int outputType) {
 		Manufacturer = (manufacturer ?? "").Trim();
@@ -73,6 +77,7 @@ public class MonitorInfo {
 		SerialNumber = (serial ?? "").Trim();
 		ProductID = (productID ?? "").Trim();
 		VideoOutputType = (outputType);
+		VideoOutputTypeFriendly = VideoOutputTechnologyLookup(VideoOutputType);
 	}
 	public MonitorInfo(MonitorInfo info) {
 		Manufacturer = info.Manufacturer;
@@ -80,6 +85,7 @@ public class MonitorInfo {
 		SerialNumber = info.SerialNumber;
 		ProductID = info.ProductID;
 		VideoOutputType = info.VideoOutputType;
+		VideoOutputTypeFriendly = info.VideoOutputTypeFriendly;
 	}
 
 	public MonitorInfo Copy() {
@@ -95,7 +101,7 @@ public class MonitorInfo {
 		ret += "Model: " + Model + nl;
 		ret += "Serial Number: " + SerialNumber + nl;
 		ret += "Product ID (PID): " + ProductID + nl;
-		ret += "Video Output Technology: " + VideoOutputTechnologyLookup(VideoOutputType) + " (" + VideoOutputType + ")"+ nl;
+		ret += "Video Output Technology: " + VideoOutputTypeFriendly + " (" + VideoOutputType + ")"+ nl;
 
 		return ret;
 	}
@@ -107,7 +113,7 @@ public class MonitorInfo {
 			case -1:
 				return "OTHER";
 			case 0:
-				return "HD15";
+				return "HD15/VGA";
 			case 1:
 				return "SVIDEO";
 			case 2:

@@ -2,14 +2,11 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using CsvHelper;
 using CsvHelper.Configuration;
 using Microsoft.Win32;
 using EZInventory.InfoClasses;
 using System.Globalization;
-using System.Runtime.CompilerServices;
 
 namespace EZInventory.CSVWriter {
 	class CSVWriterClass {
@@ -19,19 +16,19 @@ namespace EZInventory.CSVWriter {
 			List<CSVInfo> CSVInfos = new List<CSVInfo>();
 			string nul = "N/A";
 
-			CSVInfo computerInfo = new CSVInfo(computer.ComputerName, "Computer", computer.Manufacturer, computer.Model, "Asset Tag: " + computer.AssetTag, computer.ComputerName, computer.SerialNumber, "True", nul, nul, computer.Username);
-			CSVInfo osInfo = new CSVInfo(computer.ComputerName, "Operating System", "Microsoft", computer.WindowsVersion, nul, nul, nul, "True", nul, nul, computer.Username);
+			CSVInfo computerInfo = new CSVInfo(computer.ComputerName, "Computer", computer.IPAddress, computer.Manufacturer, computer.Model, computer.WindowsVersion, nul, nul, computer.SerialNumber, "True", computer.AssetTag, nul, nul, nul, nul, computer.Username, computer.UsernameDisplayName);
+			//CSVInfo osInfo = new CSVInfo(computer.ComputerName, "Operating System", "Microsoft", computer.WindowsVersion, nul, nul, nul, "True", nul, nul, computer.Username);
 
 			CSVInfos.Add(computerInfo);
-			CSVInfos.Add(osInfo);
+			//CSVInfos.Add(osInfo);
 
 			foreach (MonitorInfo monitor in monitors) {
-				CSVInfo monitorInfo = new CSVInfo(computer.ComputerName, "Monitor", monitor.Manufacturer, monitor.Model, nul, nul, monitor.SerialNumber, "True", monitor.ProductID, nul, computer.Username);
+				CSVInfo monitorInfo = new CSVInfo(computer.ComputerName, "Monitor", nul, monitor.Manufacturer, monitor.Model, nul, nul, nul, monitor.SerialNumber, "True", nul, monitor.ProductID, nul, monitor.VideoOutputType.ToString(), monitor.VideoOutputTypeFriendly, computer.Username, computer.UsernameDisplayName);
 				CSVInfos.Add(monitorInfo);
 			}
 
 			foreach (DeviceInfo device in devices) {
-				CSVInfo deviceInfo = new CSVInfo(computer.ComputerName, "Device", device.Manufacturer, device.Model, device.DriverName, device.PNPEntityName, device.SerialNumber, device.Connected.ToString(), device.ProductID, device.VendorID, computer.Username);
+				CSVInfo deviceInfo = new CSVInfo(computer.ComputerName, "Device", nul, device.Manufacturer, device.Model, nul, device.DriverName, device.PNPEntityName, device.SerialNumber, device.Connected.ToString(), nul, device.ProductID, device.VendorID, nul, nul, computer.Username, computer.UsernameDisplayName);
 				CSVInfos.Add(deviceInfo);
 			}
 
@@ -102,26 +99,31 @@ namespace EZInventory.CSVWriter {
 		public List<CSVInfo> ReadCSV(string path) {
 
 			List<CSVInfo> readInfo = new List<CSVInfo>();
+			try {
+				using (var reader = new StreamReader(path))
+				using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture)) {
+					csv.Configuration.RegisterClassMap<CSVInfo.CSVInfoMap>();
+					readInfo = csv.GetRecords<CSVInfo>().ToList();
+				}
 
-			using (var reader = new StreamReader(path))
-			using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture)) {
-				csv.Configuration.RegisterClassMap<CSVInfo.CSVInfoMap>();
-				readInfo = csv.GetRecords<CSVInfo>().ToList();
-			}
-
-			foreach (CSVInfo info in readInfo) {
-				if ((info.TimeStamp == "") || (info.TimeStamp == null)) {
-					info.TimeStamp = DateTime.Now.ToString();
+				foreach (CSVInfo info in readInfo) {
+					if ((info.TimeStamp == "") || (info.TimeStamp == null)) {
+						info.TimeStamp = DateTime.Now.ToString();
+					}
 				}
 			}
+			catch {
+				Console.WriteLine("Error - Unable to open a StreamReader to file " + path);
+			}
+			
 
 			return readInfo;
 		}
 
 		//Merge two lists together. Removes duplicates and any conflicts where the items evaluate as equal it will use the version from l2
-		public List<CSVInfo> MergeCSVLists(List<CSVInfo> l1, List<CSVInfo> l2, bool overrideEntries) {
+		public List<CSVInfo> MergeCSVLists(List<CSVInfo> l1, List<CSVInfo> l2) {
 
-			int discardThreshold = 5; //If set to override old entries, override entries this many minutes older (default 5 minutes)
+			int discardThreshold = 20; //Mark any entries older than this (time in seconds) as disconnected (default 300 seconds(5 minutes))
 			List<CSVInfo> returnList = new List<CSVInfo>();
 			List<string> alreadyRemoved = new List<string>();
 
@@ -134,24 +136,22 @@ namespace EZInventory.CSVWriter {
 
 
 			foreach (CSVInfo info in l1) {
-				if (overrideEntries) {
-					if (!returnList.Contains(info) && !alreadyRemoved.Contains(info.ComputerName)) {
-						returnList.RemoveAll(l1Info => ((l1Info.ComputerName == info.ComputerName) && ( (Convert.ToDateTime(l1Info.TimeStamp)-DateTime.Now).TotalMinutes < discardThreshold) ));
-						
-						returnList.Add(info);
-						alreadyRemoved.Add(info.ComputerName);
-					}
+
+				if (!returnList.Contains(info)) {
+					returnList.Add(info);
 				}
-				else {
-					if (!returnList.Contains(info)) {
-						returnList.Add(info);
-					}
-					else {
-						returnList.Find(x => x == info).TimeStamp = info.TimeStamp;
-					}
-				}
-				
+
 			}
+
+			foreach (CSVInfo info in returnList) {
+				if (info.CurrentlyConnected.ToLower() == "true") {
+					if ((DateTime.Now - Convert.ToDateTime(info.TimeStamp)).TotalSeconds >= discardThreshold) {
+						info.CurrentlyConnected = "False";
+					}
+				}
+			}
+
+
 			returnList = returnList.OrderBy(o => o.ComputerName).ToList();
 			return returnList;
 		}
@@ -160,31 +160,43 @@ namespace EZInventory.CSVWriter {
 	public class CSVInfo : IEquatable<CSVInfo> {
 		public string ComputerName;
 		public string DeviceType;
+		public string IPAddress;
 		public string Manufacturer;
 		public string Model;
+		public string WindowsVersion;
 		public string DriverName;
 		public string PNPEntityName;
 		public string SerialNumber;
+		public string AssetTag;
 		public string CurrentlyConnected;
 		public string PID;
 		public string VID;
+		public string VideoOutputType;
+		public string VideoOutputTypeFriendly;
 		public string CurrentUser;
+		public string CurrentUserDisplayName;
 		public string TimeStamp;
 
-		public CSVInfo() : this("", "", "", "", "", "", "", "", "", "", "") { }
+		public CSVInfo() : this("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "") { }
 
-		public CSVInfo(string computer, string type, string manufacturer, string model, string driverName, string entityName, string serial, string connected, string pid, string vid, string user) {
+		public CSVInfo(string computer, string type, string IPAddress,string manufacturer, string model, string windowsVersion, string driverName, string entityName, string serial, string connected, string assetTag, string pid, string vid, string videoOutputType, string videoOutputTypeFriendly, string user, string userDisplayName) {
 			ComputerName = computer;
 			DeviceType = type;
+			this.IPAddress = IPAddress;
 			Manufacturer = manufacturer;
 			Model = model;
+			WindowsVersion = windowsVersion;
 			DriverName = driverName;
 			PNPEntityName = entityName;
 			SerialNumber = serial;
 			CurrentlyConnected = connected;
+			AssetTag = assetTag;
 			PID = pid;
 			VID = vid;
+			VideoOutputType = videoOutputType;
+			VideoOutputTypeFriendly = videoOutputTypeFriendly;
 			CurrentUser = user;
+			CurrentUserDisplayName = userDisplayName;
 			TimeStamp = DateTime.Now.ToString();
 			
 		}
@@ -203,16 +215,22 @@ namespace EZInventory.CSVWriter {
 			public CSVInfoMap() {
 				Map(m => m.ComputerName).Index(0).Name("Computer Name");
 				Map(m => m.DeviceType).Index(1).Name("Device Type");
-				Map(m => m.Manufacturer).Index(2).Name("Manufacturer");
-				Map(m => m.Model).Index(3).Name("Model");
-				Map(m => m.DriverName).Index(4).Name("Driver Name");
-				Map(m => m.PNPEntityName).Index(5).Name("PNP Entity Name");
-				Map(m => m.SerialNumber).Index(6).Name("Serial Number");
-				Map(m => m.CurrentlyConnected).Index(7).Name("Currently Connected");
-				Map(m => m.PID).Index(8).Name("Product ID (PID)");
-				Map(m => m.VID).Index(9).Name("Vendor ID (VID)");
-				Map(m => m.CurrentUser).Index(10).Name("Current User when detected");
-				Map(m => m.TimeStamp).Index(11).Name("Time last detected").Optional();
+				Map(m => m.IPAddress).Index(2).Name("IP Address");
+				Map(m => m.Manufacturer).Index(3).Name("Manufacturer");
+				Map(m => m.Model).Index(4).Name("Model");
+				Map(m => m.WindowsVersion).Index(5).Name("Windows Version");
+				Map(m => m.DriverName).Index(6).Name("Driver Name");
+				Map(m => m.PNPEntityName).Index(7).Name("PNP Entity Name");
+				Map(m => m.SerialNumber).Index(8).Name("Serial Number");
+				Map(m => m.CurrentlyConnected).Index(9).Name("Currently Connected");
+				Map(m => m.AssetTag).Index(10).Name("Asset Tag");
+				Map(m => m.PID).Index(11).Name("Product ID (PID)");
+				Map(m => m.VID).Index(12).Name("Vendor ID (VID)");
+				Map(m => m.VideoOutputType).Index(13).Name("Video Output Type");
+				Map(m => m.VideoOutputTypeFriendly).Index(14).Name("Video Output Type Friendly");
+				Map(m => m.CurrentUser).Index(15).Name("Current User");
+				Map(m => m.CurrentUserDisplayName).Index(16).Name("Current User Display Name");
+				Map(m => m.TimeStamp).Index(17).Name("Time last detected").Optional();
 			}
 		}
 

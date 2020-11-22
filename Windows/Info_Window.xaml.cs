@@ -8,8 +8,6 @@ using System.ComponentModel;
 using EZInventory.InfoClasses;
 using EZInventory.CSVWriter;
 using EZInventory.Windows;
-using System.Reflection.Emit;
-using System.IO;
 
 /*
 
@@ -205,7 +203,7 @@ namespace EZInventory {
 			ComputerInfoUserControl.ComputerModel.Text = info.Model;
 			ComputerInfoUserControl.SerialNumber.Text = info.SerialNumber;
 			ComputerInfoUserControl.WindowsVersion.Text = info.WindowsVersion;
-			ComputerInfoUserControl.CurrentUser.Text = info.Username;
+			ComputerInfoUserControl.CurrentUser.Text = info.UsernameDisplayName + " (" + info.Username + ")";
 			ComputerInfoUserControl.AssetTag.Text = info.AssetTag;
 
 			return info;
