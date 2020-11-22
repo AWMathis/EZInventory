@@ -35,7 +35,7 @@
 				
 				<TextBlock Grid.Row="0" Grid.Column="0" Text="Author: Alex Mathis" FontSize="20" TextWrapping="Wrap"/>
 				<TextBox Grid.Row="1" Grid.Column="0" Text="Email: github@awmathis.com" FontSize="20" TextWrapping="Wrap" IsReadOnly="True" Background="Transparent"/>
-				<TextBlock Grid.Row="2" Grid.Column="0" Text="Version: 1.2" FontSize="20" TextWrapping="Wrap"/>
+				<TextBlock Grid.Row="2" Grid.Column="0" Text="Version: 2.0" FontSize="20" TextWrapping="Wrap"/>
 
 				<TextBlock Grid.Row="0" Grid.Column="1" Text="Download Page:" FontSize="20" TextWrapping="Wrap"/>
 				<TextBox Grid.Row="1" Grid.Column="1" Grid.RowSpan="2" Text="https://github.com/AlexM327/EZInventory" FontSize="20" TextWrapping="Wrap" IsReadOnly="True" Background="Transparent"/>
@@ -45,6 +45,7 @@
 		<Border Grid.Row="1" Grid.Column="0" BorderBrush="Yellow" BorderThickness="2">
 			<StackPanel>
 				<TextBlock FontSize="20" Text="Tips: You can either place a usb.ids file (obtained from http://www.linux-usb.org/usb-ids.html) in the same directory as this exe, or you can specify one with command line arguments if you want a more updated version thatn what I've included" TextWrapping="Wrap"/>
+				<TextBlock FontSize="20" Text="&#x0a;&#x0a;Tip: Try running with the /? argument to see all the options!" TextWrapping="Wrap"/>
 			</StackPanel>
 		</Border>
 		
