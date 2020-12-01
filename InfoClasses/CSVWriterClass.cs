@@ -123,7 +123,7 @@ namespace EZInventory.CSVWriter {
 		//Merge two lists together. Removes duplicates and any conflicts where the items evaluate as equal it will use the version from l2
 		public List<CSVInfo> MergeCSVLists(List<CSVInfo> l1, List<CSVInfo> l2) {
 
-			int discardThreshold = 20; //Mark any entries older than this (time in seconds) as disconnected (default 300 seconds(5 minutes))
+			int discardThreshold = 3600; //Mark any entries older than this (time in seconds) as disconnected (default 300 seconds(5 minutes))
 			List<CSVInfo> returnList = new List<CSVInfo>();
 			List<string> alreadyRemoved = new List<string>();
 
