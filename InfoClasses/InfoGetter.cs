@@ -328,6 +328,15 @@ namespace EZInventory.InfoClasses {
 				deviceInfos.Add(new DeviceInfo(manufacturer, model, serial, driverName, entityName, vendor, device, connected));
 			}
 
+
+			//Get info for potential surface docks
+			ManagementObjectCollection surfaceDockCollection = SurfaceDockQuery(computer);
+			if (surfaceDockCollection != null) {
+				ManagementObject surfaceDock = surfaceDockCollection.OfType<ManagementObject>().First();
+				string sDVendor = DeviceIDLookup(((string)surfaceDock.Properties["VendorId"].Value).Substring(2), "").mfg;
+				deviceInfos.Add(new DeviceInfo(sDVendor, (string)surfaceDock.Properties["DeviceName"].Value, (string)surfaceDock.Properties["DockSerialNumber"].Value, (string)surfaceDock.Properties["DeviceName"].Value, (string)surfaceDock.Properties["DeviceName"].Value, (string)surfaceDock.Properties["VendorId"].Value, ((string[])surfaceDock.Properties["ProductId"].Value)[0], true));
+			}
+
 			return deviceInfos;
 		}
 
@@ -498,11 +507,11 @@ namespace EZInventory.InfoClasses {
 			return hexString;
 		}
 
-		private ManagementObjectCollection CIMQuery(string computer, string className) {
-			ManagementScope scope = new ManagementScope("\\\\" + computer + "\\root\\cimv2");
+		private ManagementObjectCollection CIMQuery(string computer, string className, string nameSpace) {
+			ManagementScope scope = new ManagementScope("\\\\" + computer + nameSpace);
 			try {
 				scope.Connect();
-			} 
+			}
 			catch {
 				Console.WriteLine("Unable to connect to RPC server: " + computer);
 				return null;
@@ -518,25 +527,18 @@ namespace EZInventory.InfoClasses {
 			return queryCollection;
 		}
 
+		private ManagementObjectCollection CIMQuery(string computer, string className) {
+			return CIMQuery(computer, className, "\\root\\cimv2");
+		}
+
 		private ManagementObjectCollection WMIQuery(string computer, string className) {
 
-			ManagementScope scope = new ManagementScope("\\\\" + computer + "\\root\\wmi");
-			try {
-				scope.Connect();
-			} 
-			catch {
-				Console.WriteLine("Unable to connect to RPC server: " + computer);
-				return null;
-			}
+			return CIMQuery(computer, className, "\\root\\wmi");
+		}
+		private ManagementObjectCollection SurfaceDockQuery(string computer) {
 
-			ObjectQuery query = new ObjectQuery("SELECT * FROM " + className);
-			ManagementObjectSearcher searcher = new ManagementObjectSearcher(scope, query);
+			return CIMQuery(computer, "SurfaceDockComponent", "root/Surface");
 
-			ManagementObjectCollection queryCollection = searcher.Get();
-
-			searcher.Dispose();
-
-			return queryCollection;
 		}
 
 

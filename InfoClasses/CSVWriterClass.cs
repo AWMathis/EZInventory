@@ -137,8 +137,17 @@ namespace EZInventory.CSVWriter {
 
 			foreach (CSVInfo info in l1) {
 
-				if (!returnList.Contains(info)) {
+				int i = returnList.IndexOf(info);
+				if (i == -1) {
 					returnList.Add(info);
+				}
+				else { //If item is already on the list (from the new scan), if the old entry has a username and new one doesn't use the name (and ONLY the name from the old one)
+					int l1Index = l1.IndexOf(info);
+					if (returnList[i].CurrentUser == "N/A" && l1[l1Index].CurrentUser != "N/A") {
+						//Null user
+						returnList[i].CurrentUser = l1[l1Index].CurrentUser;
+						returnList[i].CurrentUserDisplayName = l1[l1Index].CurrentUserDisplayName;
+					}
 				}
 
 			}
@@ -228,8 +237,8 @@ namespace EZInventory.CSVWriter {
 				Map(m => m.VID).Index(12).Name("Vendor ID (VID)");
 				Map(m => m.VideoOutputType).Index(13).Name("Video Output Type");
 				Map(m => m.VideoOutputTypeFriendly).Index(14).Name("Video Output Type Friendly");
-				Map(m => m.CurrentUser).Index(15).Name("Current User");
-				Map(m => m.CurrentUserDisplayName).Index(16).Name("Current User Display Name");
+				Map(m => m.CurrentUser).Index(15).Name("Most Recent User");
+				Map(m => m.CurrentUserDisplayName).Index(16).Name("Most Recent User Display Name");
 				Map(m => m.TimeStamp).Index(17).Name("Time last detected").Optional();
 			}
 		}

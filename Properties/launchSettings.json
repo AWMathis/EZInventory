@@ -1,8 +1,7 @@
 {
   "profiles": {
     "EZInventory": {
-      "commandName": "Project",
-      "commandLineArgs": "/computer alisluminis /db db.csv /optimal"
+      "commandName": "Project"
     }
   }
 }
