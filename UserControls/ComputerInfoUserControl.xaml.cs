@@ -12,7 +12,6 @@ namespace EZInventory.UserControls {
 		public event searchButtonClick searchButtonClickEvent;
 
 		public ComputerInfoUserControl() {
-
 			InitializeComponent();
 		}
 

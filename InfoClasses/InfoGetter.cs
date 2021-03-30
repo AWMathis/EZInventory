@@ -7,6 +7,7 @@ using Microsoft.Win32;
 using System.IO;
 using Microsoft.Extensions.FileProviders;
 using System.Reflection;
+using System.Globalization;
 
 namespace EZInventory.InfoClasses {
 
@@ -81,13 +82,16 @@ namespace EZInventory.InfoClasses {
 			string model = (computerInfo["Manufacturer"] ?? "N/A").ToString() + " " + (computerInfo["Model"].ToString());
 			string serial = (biosInfo["SerialNumber"]  ?? "N/A").ToString();
 			string version = (windowsInfo["Caption"] ?? "N/A") + " " + (windowsInfo["OSArchitecture"] ?? "????") + " (" + (windowsInfo["Version"] ?? "????") + ")";
+			string bootTime = (ManagementDateTimeConverter.ToDateTime(windowsInfo["LastBootUpTime"].ToString())).ToString();
+
 
 			string username = (computerInfo["Username"] ?? "N/A").ToString();
 			username = username.Remove(0,username.LastIndexOf("\\")+1); //+1 to remove slashes
 
 			string displayName = new ADQuerier().GetDisplayName(username);
 			string assettag = (enclosureInfo["SMBIOSAssetTag"] ?? "N/A").ToString();
-			ComputerInfo info = new ComputerInfo(name, address, manufacturer, model, serial, version, username, displayName, assettag);
+
+			ComputerInfo info = new ComputerInfo(name, address, manufacturer, model, serial, version, username, displayName, assettag, bootTime);
 			return info;
 		}
 
@@ -537,7 +541,7 @@ namespace EZInventory.InfoClasses {
 		}
 		private ManagementObjectCollection SurfaceDockQuery(string computer) {
 
-			return CIMQuery(computer, "SurfaceDockComponent", "root/Surface");
+			return CIMQuery(computer, "SurfaceDockComponent", "/root/Surface");
 
 		}
 

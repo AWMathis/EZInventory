@@ -11,8 +11,9 @@ namespace EZInventory.InfoClasses{
 		public string Username;
 		public string UsernameDisplayName;
 		public string AssetTag;
+		public string BootTime;
 
-		public ComputerInfo(string name, string address, string manufacturer, string model, string serial, string version, string username, string displayName, string assettag) {
+		public ComputerInfo(string name, string address, string manufacturer, string model, string serial, string version, string username, string displayName, string assettag, string bootTime) {
 			ComputerName = (name ?? "").Trim();
 			IPAddress = (address ?? "").Trim();
 			Model = (model ?? "").Trim();
@@ -22,6 +23,7 @@ namespace EZInventory.InfoClasses{
 			Username = (username ?? "").Trim();
 			UsernameDisplayName = (displayName ?? "").Trim();
 			AssetTag = (assettag == serial) ? "" : (assettag ?? "").Trim();
+			BootTime = (bootTime ?? "").Trim(); ;
 		}
 
 		public ComputerInfo() {
@@ -34,6 +36,7 @@ namespace EZInventory.InfoClasses{
 			Username = "";
 			UsernameDisplayName = "";
 			AssetTag = "";
+			BootTime = "";
 		}
 
 		public override string ToString() {
@@ -48,6 +51,7 @@ namespace EZInventory.InfoClasses{
 			ret += "Windows Version: " + WindowsVersion + nl;
 			ret += "Current User: " + UsernameDisplayName + " (" + Username + ")" + nl;
 			ret += "Asset Tag: " + AssetTag + nl;
+			ret += "Boot Time: " + BootTime + nl;
 
 			return ret;
 		}

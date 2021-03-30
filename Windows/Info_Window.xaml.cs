@@ -199,6 +199,7 @@ namespace EZInventory {
 		public ComputerInfo DisplayComputerInfo(ComputerInfo info) {
 
 			ComputerInfoUserControl.ComputerName.Text = info.ComputerName;
+			ComputerInfoUserControl.ComputerName.ToolTip = "Boot Time: " + info.BootTime;
 			ComputerInfoUserControl.IPAddress.Text = info.IPAddress;
 			ComputerInfoUserControl.ComputerModel.Text = info.Model;
 			ComputerInfoUserControl.SerialNumber.Text = info.SerialNumber;
