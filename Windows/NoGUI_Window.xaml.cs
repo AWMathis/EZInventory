@@ -82,13 +82,7 @@ namespace EZInventory.Windows {
 				writer.WriteCSV(writer.MergeCSVLists(currentDB, masterList), args.dbName);
 				List<CSVInfo> newDB = writer.ReadCSV(args.dbName);
 				List<CSVInfo> added = new List<CSVInfo>();
-				List<CSVInfo> removed = new List<CSVInfo>();
 
-				foreach (CSVInfo oldInfo in currentDB) {
-					if (!newDB.Contains(oldInfo)) {
-						removed.Add(oldInfo);
-					}
-				}
 				foreach (CSVInfo newInfo in newDB) {
 					if (!currentDB.Contains(newInfo)) {
 						added.Add(newInfo);
@@ -96,7 +90,6 @@ namespace EZInventory.Windows {
 				}
 
 				writer.WriteCSV(added, "added.csv");
-				writer.WriteCSV(removed, "removed.csv");
 
 				System.Windows.Application.Current.Shutdown();
 			}

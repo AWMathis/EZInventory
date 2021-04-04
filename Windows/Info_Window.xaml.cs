@@ -8,21 +8,7 @@ using System.ComponentModel;
 using EZInventory.InfoClasses;
 using EZInventory.CSVWriter;
 using EZInventory.Windows;
-
-/*
-
- * 
- * Multiple tabs for multiple computers?
-
-Add option to exclude pointless driver names like usb hubs?
-
-Console output kinda sucks, maybe swap back to windowed application?
-
-finish menu buttons
-
-add an about screen to the menu
-
- */
+using System.Reflection;
 
 namespace EZInventory {
 
@@ -37,6 +23,8 @@ namespace EZInventory {
 
 		private InputArgs globalArgs;
 
+		private string PackageVersion = "Version " + Assembly.GetEntryAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+
 		public Info_Window(InputArgs args) {
 
 			globalArgs = args;
@@ -46,7 +34,7 @@ namespace EZInventory {
 			Console.WriteLine();
 
 			InitializeComponent();
-			StatusBarText.Text = "Ready";
+			StatusBarText.Text = PackageVersion;
 
 			//apply variables from args here
 			ComputerInfoUserControl.ComputerName.Text = args.computerName ?? "";
@@ -180,7 +168,7 @@ namespace EZInventory {
 					DisplayDeviceInfo(deviceInfoList);
 					break;
 				case 5:
-					StatusBarText.Text = "Ready";
+					StatusBarText.Text = PackageVersion;
 					break;
 				case -1:
 					StatusBarText.Text = "Error: Unable to query info";

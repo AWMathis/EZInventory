@@ -517,7 +517,7 @@ namespace EZInventory.InfoClasses {
 				scope.Connect();
 			}
 			catch {
-				Console.WriteLine("Unable to connect to RPC server: " + computer);
+				Console.WriteLine("Unable to connect to RPC server for namespace " + nameSpace + " on " + computer);
 				return null;
 			}
 
@@ -544,22 +544,6 @@ namespace EZInventory.InfoClasses {
 			return CIMQuery(computer, "SurfaceDockComponent", "/root/Surface");
 
 		}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 	}
